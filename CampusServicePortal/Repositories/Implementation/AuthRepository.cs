@@ -9,10 +9,13 @@ namespace CampusServicePortal.Repositories.Implementation
     {
         private readonly ApplicationDbContext _context;
 
+
         public AuthRepository(ApplicationDbContext context)
         {
             _context = context;
         }
+
+
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -21,22 +24,31 @@ namespace CampusServicePortal.Repositories.Implementation
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+
+
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
+
+
 
         public async Task AddUserAsync(User user)
         {
             await _context.Users.AddAsync(user);
         }
 
+
+
         public async Task AddStudentAsync(Student student)
         {
             await _context.Students.AddAsync(student);
         }
+
+
 
         public async Task SaveChangesAsync()
         {

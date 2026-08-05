@@ -11,7 +11,6 @@ namespace CampusServicePortal.Services.Implementation
 {
     public class AuthService : IAuthService
     {
-
         private readonly IAuthRepository _authRepository;
         private readonly IConfiguration _configuration;
 
@@ -28,7 +27,6 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-
             var existingUser =
                 await _authRepository.GetUserByEmailAsync(dto.Email);
 
@@ -39,7 +37,6 @@ namespace CampusServicePortal.Services.Implementation
             }
 
 
-
             var user = new User
             {
                 FullName = dto.FullName,
@@ -47,7 +44,7 @@ namespace CampusServicePortal.Services.Implementation
                 Email = dto.Email,
 
                 PasswordHash =
-                BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    BCrypt.Net.BCrypt.HashPassword(dto.Password),
 
                 RoleId = 2
             };
@@ -75,7 +72,6 @@ namespace CampusServicePortal.Services.Implementation
 
             await _authRepository.AddStudentAsync(student);
 
-
             await _authRepository.SaveChangesAsync();
 
 
@@ -92,11 +88,8 @@ namespace CampusServicePortal.Services.Implementation
 
                 Token = GenerateToken(user),
 
-                Expiration =
-                DateTime.UtcNow.AddMinutes(60)
-
+                Expiration = DateTime.UtcNow.AddMinutes(60)
             };
-
         }
 
 
@@ -105,9 +98,8 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
         {
-
             var user =
-            await _authRepository.GetUserByEmailAsync(dto.Email);
+                await _authRepository.GetUserByEmailAsync(dto.Email);
 
 
 
@@ -119,9 +111,9 @@ namespace CampusServicePortal.Services.Implementation
 
 
             bool passwordValid =
-            BCrypt.Net.BCrypt.Verify(
-                dto.Password,
-                user.PasswordHash);
+                BCrypt.Net.BCrypt.Verify(
+                    dto.Password,
+                    user.PasswordHash);
 
 
 
@@ -140,14 +132,12 @@ namespace CampusServicePortal.Services.Implementation
 
                 Email = user.Email,
 
-                Role = user.Role.RoleName,
+                Role = user.Role?.RoleName ?? "Student",
 
                 Token = GenerateToken(user),
 
-                Expiration =
-                DateTime.UtcNow.AddMinutes(60)
+                Expiration = DateTime.UtcNow.AddMinutes(60)
             };
-
         }
 
 
@@ -157,67 +147,80 @@ namespace CampusServicePortal.Services.Implementation
         private string GenerateToken(User user)
         {
 
+            var jwtKey = _configuration["Jwt:Key"];
+
+
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new Exception(
+                    "JWT Key is missing in appsettings.json");
+            }
+
+
+
+            var issuer =
+                _configuration["Jwt:Issuer"]
+                ?? "CampusServicePortal";
+
+
+
+            var audience =
+                _configuration["Jwt:Audience"]
+                ?? "CampusServicePortalUsers";
+
+
+
             var key =
-            new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(
-            _configuration["Jwt:Key"]));
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtKey));
+
 
 
             var credentials =
-            new SigningCredentials(
-            key,
-            SecurityAlgorithms.HmacSha256);
+                new SigningCredentials(
+                    key,
+                    SecurityAlgorithms.HmacSha256);
 
 
 
             var claims = new[]
             {
                 new Claim(
-                JwtRegisteredClaimNames.Sub,
-                user.UserId.ToString()),
+                    JwtRegisteredClaimNames.Sub,
+                    user.UserId.ToString()),
 
 
                 new Claim(
-                JwtRegisteredClaimNames.Email,
-                user.Email),
+                    JwtRegisteredClaimNames.Email,
+                    user.Email),
 
 
                 new Claim(
-                ClaimTypes.Role,
-                user.Role.RoleName)
-
+                    ClaimTypes.Role,
+                    user.Role?.RoleName ?? "Student")
             };
 
 
 
             var token =
-            new JwtSecurityToken(
+                new JwtSecurityToken(
 
-                issuer:
-                _configuration["Jwt:Issuer"],
+                    issuer: issuer,
 
+                    audience: audience,
 
-                audience:
-                _configuration["Jwt:Audience"],
+                    claims: claims,
 
+                    expires:
+                    DateTime.UtcNow.AddMinutes(60),
 
-                claims: claims,
+                    signingCredentials: credentials
+                );
 
-
-                expires:
-                DateTime.UtcNow.AddMinutes(60),
-
-
-                signingCredentials:
-                credentials
-
-            );
 
 
             return new JwtSecurityTokenHandler()
-            .WriteToken(token);
-
+                .WriteToken(token);
         }
-
     }
 }
