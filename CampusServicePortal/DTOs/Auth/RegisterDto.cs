@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CampusServicePortal.DTOs.Auth
 {
@@ -13,22 +13,27 @@ namespace CampusServicePortal.DTOs.Auth
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password is required")]
-        [MinLength(6)]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
         public string Password { get; set; } = string.Empty;
 
         [Phone]
         public string? PhoneNumber { get; set; }
 
-        [Required(ErrorMessage = "Student Number is required")]
-        public string StudentNumber { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Faculty is required")]
-        public string Faculty { get; set; } = string.Empty;
+        /// <summary>
+        /// Must match a record in StudentMasterList. Immutable after registration.
+        /// </summary>
+        [Required(ErrorMessage = "Index Number is required")]
+        [MaxLength(50)]
+        public string IndexNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Degree Program is required")]
+        [MaxLength(150)]
         public string DegreeProgram { get; set; } = string.Empty;
 
-        [Range(2000, 2100)]
+        [Range(2000, 2100, ErrorMessage = "Enrollment year must be between 2000 and 2100")]
         public int EnrollmentYear { get; set; }
+
+        [MaxLength(300)]
+        public string? Address { get; set; }
     }
 }

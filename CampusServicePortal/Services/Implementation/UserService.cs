@@ -1,4 +1,4 @@
-﻿using CampusServicePortal.DTOs.Users;
+using CampusServicePortal.DTOs.Users;
 using CampusServicePortal.Repositories.Interfaces;
 using CampusServicePortal.Services.Interfaces;
 
@@ -29,7 +29,7 @@ namespace CampusServicePortal.Services.Implementation
 
                 Email = user.Email,
 
-                RoleName = user.Role.RoleName
+                RoleName = user.Role?.RoleName ?? string.Empty
 
             });
         }
@@ -57,7 +57,7 @@ namespace CampusServicePortal.Services.Implementation
 
                 Email = user.Email,
 
-                RoleName = user.Role.RoleName
+                RoleName = user.Role?.RoleName ?? string.Empty
             };
         }
     }
