@@ -4,6 +4,7 @@ using CampusServicePortal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CampusServicePortal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805100345_Module1_StudentProfile_Extensions")]
+    partial class Module1_StudentProfile_Extensions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,6 +211,63 @@ namespace CampusServicePortal.Migrations
                         .IsUnique();
 
                     b.ToTable("StudentMasterList");
+
+                    b.HasData(
+                        new
+                        {
+                            MasterListId = 1,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DegreeProgram = "BSc Engineering",
+                            EnrollmentYear = 2021,
+                            Faculty = "Faculty of Engineering",
+                            FullName = "Ashan Perera",
+                            IndexNumber = "EG/2021/001",
+                            IsRegistered = false
+                        },
+                        new
+                        {
+                            MasterListId = 2,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DegreeProgram = "BSc Computer Science",
+                            EnrollmentYear = 2021,
+                            Faculty = "Faculty of Science",
+                            FullName = "Dilani Silva",
+                            IndexNumber = "SC/2021/045",
+                            IsRegistered = false
+                        },
+                        new
+                        {
+                            MasterListId = 3,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DegreeProgram = "BA Economics",
+                            EnrollmentYear = 2022,
+                            Faculty = "Faculty of Arts",
+                            FullName = "Kasun Fernando",
+                            IndexNumber = "AR/2022/012",
+                            IsRegistered = false
+                        },
+                        new
+                        {
+                            MasterListId = 4,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DegreeProgram = "MBBS",
+                            EnrollmentYear = 2022,
+                            Faculty = "Faculty of Medicine",
+                            FullName = "Nethmi Jayasinghe",
+                            IndexNumber = "MD/2022/008",
+                            IsRegistered = false
+                        },
+                        new
+                        {
+                            MasterListId = 5,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DegreeProgram = "BSc Electrical Engineering",
+                            EnrollmentYear = 2023,
+                            Faculty = "Faculty of Engineering",
+                            FullName = "Sahan Wickramasinghe",
+                            IndexNumber = "EG/2023/099",
+                            IsRegistered = false
+                        });
                 });
 
             modelBuilder.Entity("CampusServicePortal.Models.User", b =>
