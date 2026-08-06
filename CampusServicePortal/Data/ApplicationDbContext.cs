@@ -1,7 +1,5 @@
-﻿using CampusServicePortal.Models;
+using CampusServicePortal.Models;
 using Microsoft.EntityFrameworkCore;
-
-
 
 namespace CampusServicePortal.Data
 {
@@ -15,32 +13,55 @@ namespace CampusServicePortal.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<StudentMasterList> StudentMasterList { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Configure the relationships
-            modelBuilder.Entity<User>()
-                .HasOne(x => x.Role)
-                .WithMany(x => x.Users)
-                .HasForeignKey(x => x.RoleId);
 
+            // ── User ─────────────────────────────────────────────────────────────
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            // ── Student ───────────────────────────────────────────────────────────
             modelBuilder.Entity<Student>()
-                .HasOne(x => x.User)
-                .WithOne(x => x.Student)
+                .HasOne(s => s.User)
+                .WithOne(u => u.Student)
                 .HasForeignKey<Student>(s => s.UserId);
 
-            modelBuilder.Entity<RefreshToken>()
-                .HasOne(x => x.User)
-                .WithMany(x => x.RefreshTokens)
-                .HasForeignKey(x => x.UserId);
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.IndexNumber)
+                .IsUnique();
 
+            // ── RefreshToken ──────────────────────────────────────────────────────
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId);
+
+            // ── PasswordResetToken ────────────────────────────────────────────────
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasOne(prt => prt.User)
+                .WithMany(u => u.PasswordResetTokens)
+                .HasForeignKey(prt => prt.UserId);
+
+            // ── StudentMasterList ─────────────────────────────────────────────────
+            modelBuilder.Entity<StudentMasterList>()
+                .HasIndex(sml => sml.IndexNumber)
+                .IsUnique();
+
+            // ── Role Seed Data ────────────────────────────────────────────────────
             modelBuilder.Entity<Role>().HasData(
                 new Role { RoleId = 1, RoleName = "Admin" },
                 new Role { RoleId = 2, RoleName = "Student" }
             );
-
         }
-
     }
 }

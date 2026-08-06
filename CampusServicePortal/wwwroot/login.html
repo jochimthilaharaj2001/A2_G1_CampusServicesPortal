@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — Campus Services Portal</title>
+<meta name="description" content="Sign in to the Campus Services Portal to manage your university services."/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-bg"></div>
+
+<div class="auth-wrapper">
+  <!-- Left: Branding -->
+  <div class="auth-brand">
+    <div class="brand-content">
+      <div class="brand-logo">🎓</div>
+      <h1 class="brand-title">Campus Services<br/>Portal</h1>
+      <p class="brand-subtitle">Your one-stop destination for all university services — hostels, labs, events, certificates and more.</p>
+      <div class="brand-features">
+        <div class="brand-feature"><span>🏠</span><span>Hostel Accommodation Booking</span></div>
+        <div class="brand-feature"><span>🔬</span><span>Lab Resource Reservations</span></div>
+        <div class="brand-feature"><span>🎉</span><span>Campus Event Registrations</span></div>
+        <div class="brand-feature"><span>📜</span><span>Certificate Requests</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Login Form -->
+  <div class="auth-form-side">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to access your campus portal</p>
+      </div>
+
+      <div id="login-alert" class="alert global-alert" role="alert"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrapper has-icon">
+            <input id="email" type="email" placeholder="your.email@university.edu" autocomplete="email" required/>
+            <span class="input-icon">✉</span>
+          </div>
+          <div class="field-error" id="email-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper has-icon">
+            <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required/>
+            <span class="input-icon">🔒</span>
+          </div>
+          <div class="field-error" id="password-error"></div>
+        </div>
+
+        <div class="flex-between mb-2" style="margin-bottom:1.25rem;">
+          <label style="display:flex;align-items:center;gap:0.5rem;text-transform:none;letter-spacing:0;font-size:0.875rem;cursor:pointer;">
+            <input type="checkbox" id="remember" style="width:auto;padding:0;"/>
+            Remember me
+          </label>
+          <a href="/forgot-password.html" class="text-link" style="font-size:0.875rem;">Forgot password?</a>
+        </div>
+
+        <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">Sign In</span>
+        </button>
+      </form>
+
+      <div class="divider">or</div>
+
+      <p class="text-center" style="color:var(--text-secondary);font-size:0.9rem;">
+        New student?
+        <a href="/register.html" class="text-link">Create an account</a>
+      </p>
+
+      <p class="text-center mt-2" style="color:var(--text-muted);font-size:0.78rem;">
+        Need to verify your email?
+        <a href="/verify-email.html" class="text-link">Verify here</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>
