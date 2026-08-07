@@ -32,10 +32,12 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IHostelService, HostelService>();
+            builder.Services.AddScoped<IRoomService, RoomService>();
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IHostelRepository, HostelRepository>();
+            builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 
             var app = builder.Build();
 
