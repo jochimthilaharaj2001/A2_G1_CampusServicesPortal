@@ -1,10 +1,12 @@
 using CampusServicePortal.Data;
-using Microsoft.EntityFrameworkCore;
 using CampusServicePortal.Helpers;
-using CampusServicePortal.Services.Interfaces;
-using CampusServicePortal.Services.Implementation;
-using CampusServicePortal.Repositories.Interfaces;
 using CampusServicePortal.Repositories.Implementation;
+using CampusServicePortal.Repositories.Interfaces;
+using CampusServicePortal.Services.Implementation;
+using CampusServicePortal.Services.Interfaces;
+using CampusServicesPortal.Hostel.Repositories;
+using CampusServicesPortal.Hostel.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace CampusServicePortal
 {
@@ -29,9 +31,11 @@ namespace CampusServicePortal
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IHostelService, HostelService>();
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IHostelRepository, HostelRepository>();
 
             var app = builder.Build();
 

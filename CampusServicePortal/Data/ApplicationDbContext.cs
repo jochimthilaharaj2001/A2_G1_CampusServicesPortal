@@ -1,4 +1,5 @@
 ﻿using CampusServicePortal.Models;
+using CampusServicesPortal.Hostel.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -15,6 +16,11 @@ namespace CampusServicePortal.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<Hostel> Hostels { get; set; }
+        public DbSet<Room> Rooms { get; set; }
+        public DbSet<HostelApplication> HostelApplications { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
