@@ -45,5 +45,8 @@ namespace CampusServicePortal.Models
 
         public ICollection<PasswordResetToken> PasswordResetTokens { get; set; }
             = new List<PasswordResetToken>();
+
+        public ICollection<LabReservation> LabReservations { get; set; }
+            = new List<LabReservation>();
     }
 }

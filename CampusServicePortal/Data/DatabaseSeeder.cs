@@ -15,23 +15,61 @@ namespace CampusServicePortal.Data
             SeedAdminUser(db);
             SeedMasterList(db);
             SeedDemoStudent(db);
+            SeedSeats(db);
+        }
+
+        private static void SeedSeats(ApplicationDbContext db)
+        {
+            if (db.LabSeats.Any()) return;
+
+            // Seed seats for Lab 1 (Advanced Computing Lab) - capacity 30
+            for (int i = 1; i <= 30; i++)
+            {
+                db.LabSeats.Add(new LabSeat
+                {
+                    LabId = 1,
+                    SeatNumber = $"Seat {i}",
+                    IsActive = true
+                });
+            }
+
+            // Seed seats for Lab 2 (Electronics & IoT Lab) - capacity 20
+            for (int i = 1; i <= 20; i++)
+            {
+                db.LabSeats.Add(new LabSeat
+                {
+                    LabId = 2,
+                    SeatNumber = $"Seat {i}",
+                    IsActive = true
+                });
+            }
+
+            db.SaveChanges();
         }
 
         private static void SeedAdminUser(ApplicationDbContext db)
         {
-            if (db.Users.Any(u => u.Email == "admin@university.edu")) return;
-
-            db.Users.Add(new User
+            var admin = db.Users.FirstOrDefault(u => u.Email == "admin@university.edu");
+            if (admin == null)
             {
-                FullName = "System Administrator",
-                Email = "admin@university.edu",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                RoleId = 1, // Admin
-                IsActive = true,
-                EmailVerified = true,
-                CreatedDate = DateTime.UtcNow
-            });
-            db.SaveChanges();
+                db.Users.Add(new User
+                {
+                    FullName = "System Administrator",
+                    Email = "admin@university.edu",
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                    RoleId = 1, // Admin
+                    IsActive = true,
+                    EmailVerified = true,
+                    CreatedDate = DateTime.UtcNow
+                });
+                db.SaveChanges();
+            }
+            else if (string.IsNullOrEmpty(admin.Username))
+            {
+                admin.Username = "admin";
+                db.SaveChanges();
+            }
         }
 
         private static void SeedMasterList(ApplicationDbContext db)

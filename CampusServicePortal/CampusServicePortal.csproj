@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>1326efb2-b3b4-4c88-b69d-da0d24f5c6a7</UserSecretsId>
@@ -43,12 +43,7 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
     <Folder Include="Middleware\" />
-    <Folder Include="Repositories\Implementation\" />
-    <Folder Include="Repositories\Interfaces\" />
-    <Folder Include="Services\Implementation\" />
-    <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 
 </Project>
