@@ -34,13 +34,14 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IHostelService, HostelService>();
             builder.Services.AddScoped<IRoomService, RoomService>();
             builder.Services.AddScoped<IHostelApplicationService, HostelApplicationService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IHostelRepository, HostelRepository>();
             builder.Services.AddScoped<IRoomRepository, RoomRepository>();
             builder.Services.AddScoped<IHostelApplicationRepository, HostelApplicationRepository>();
-
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
