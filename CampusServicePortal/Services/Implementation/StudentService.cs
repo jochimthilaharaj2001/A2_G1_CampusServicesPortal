@@ -8,10 +8,20 @@ namespace CampusServicePortal.Services.Implementation
     public class StudentService : IStudentService
     {
         private readonly IStudentRepository _studentRepository;
+        private readonly IAuthRepository _authRepository;
+        private readonly IStudentMasterListRepository _masterListRepository;
+        private readonly IFacultyRepository _facultyRepository;
 
-        public StudentService(IStudentRepository studentRepository)
+        public StudentService(
+            IStudentRepository studentRepository,
+            IAuthRepository authRepository,
+            IStudentMasterListRepository masterListRepository,
+            IFacultyRepository facultyRepository)
         {
             _studentRepository = studentRepository;
+            _authRepository = authRepository;
+            _masterListRepository = masterListRepository;
+            _facultyRepository = facultyRepository;
         }
 
         public async Task<StudentProfileDto?> GetProfileAsync(int studentId)
@@ -42,6 +52,126 @@ namespace CampusServicePortal.Services.Implementation
             student.ContactNumber = dto.ContactNumber;
             student.Address = dto.Address;
             student.DegreeProgram = dto.DegreeProgram;
+
+            await _studentRepository.UpdateAsync(student);
+            await _studentRepository.SaveChangesAsync();
+
+            return MapToDto(student);
+        }
+
+        public async Task<StudentProfileDto> CreateStudentByAdminAsync(AdminCreateStudentDto dto)
+        {
+            // 1. Check email uniqueness
+            var existingUser = await _authRepository.GetUserByEmailAsync(dto.Email);
+            if (existingUser != null)
+                throw new InvalidOperationException("An account with this email address already exists.");
+
+            // 2. Check index number uniqueness in current students
+            var existingStudent = await _studentRepository.GetByIndexNumberAsync(dto.IndexNumber);
+            if (existingStudent != null)
+                throw new InvalidOperationException("A student with this index number already exists.");
+
+            // 3. Check or create MasterList entry
+            var masterRecord = await _masterListRepository.GetByIndexNumberAsync(dto.IndexNumber);
+            if (masterRecord == null)
+            {
+                // Create it if it doesn't exist to maintain data integrity
+                masterRecord = new StudentMasterList
+                {
+                    IndexNumber = dto.IndexNumber,
+                    FullName = dto.FullName,
+                    Faculty = dto.Faculty,
+                    DegreeProgram = dto.DegreeProgram,
+                    EnrollmentYear = dto.EnrollmentYear,
+                    IsRegistered = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _masterListRepository.AddRangeAsync(new[] { masterRecord });
+            }
+            else
+            {
+                if (masterRecord.IsRegistered)
+                    throw new InvalidOperationException("This index number is already registered.");
+                await _masterListRepository.MarkAsRegisteredAsync(dto.IndexNumber);
+            }
+
+            // 4. Create User
+            if (!string.IsNullOrWhiteSpace(dto.Password) && dto.Password.Length < 8)
+                throw new InvalidOperationException("Password must be at least 8 characters.");
+
+            var user = new User
+            {
+                FullName = dto.FullName,
+                Email = dto.Email,
+                // If password is not provided by Admin, create a random default one
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(!string.IsNullOrWhiteSpace(dto.Password) ? dto.Password : Guid.NewGuid().ToString("N")),
+                PhoneNumber = dto.PhoneNumber,
+                RoleId = 2, // Student
+                IsActive = true,
+                EmailVerified = true, // Admin created accounts are verified by default
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _authRepository.AddUserAsync(user);
+            await _authRepository.SaveChangesAsync();
+
+            // 5. Create Student
+            var faculty = await ResolveFacultyAsync(dto.Faculty);
+            var student = new Student
+            {
+                UserId = user.UserId,
+                IndexNumber = dto.IndexNumber,
+                FacultyId = faculty?.FacultyId,
+                Faculty = faculty?.Name ?? dto.Faculty,
+                DegreeProgram = dto.DegreeProgram,
+                EnrollmentYear = dto.EnrollmentYear,
+                ContactNumber = dto.ContactNumber,
+                Address = dto.Address,
+                IsActive = true
+            };
+
+            await _authRepository.AddStudentAsync(student);
+            await _authRepository.SaveChangesAsync();
+            await _masterListRepository.SaveChangesAsync();
+
+            // Re-fetch to get complete object with role
+            var newStudent = await _studentRepository.GetByIdAsync(student.StudentId);
+            return MapToDto(newStudent!);
+        }
+
+        public async Task<StudentProfileDto> UpdateStudentByAdminAsync(int studentId, AdminUpdateStudentDto dto)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId)
+                ?? throw new KeyNotFoundException("Student not found.");
+
+            // Update User fields
+            if (student.User != null)
+            {
+                student.User.FullName = dto.FullName;
+                student.User.Email = dto.Email;
+                student.User.PhoneNumber = dto.PhoneNumber;
+                student.User.IsActive = dto.IsActive;
+                student.User.EmailVerified = dto.EmailVerified;
+            }
+
+            // Update Student fields
+            var faculty = await ResolveFacultyAsync(dto.Faculty);
+            student.FacultyId = faculty?.FacultyId;
+            student.Faculty = faculty?.Name ?? dto.Faculty;
+            student.DegreeProgram = dto.DegreeProgram;
+            student.EnrollmentYear = dto.EnrollmentYear;
+            student.ContactNumber = dto.ContactNumber;
+            student.Address = dto.Address;
+            student.IsActive = dto.IsActive;
+            
+            if (!dto.IsActive && student.DeactivatedAt == null)
+            {
+                student.DeactivatedAt = DateTime.UtcNow;
+            }
+            else if (dto.IsActive && student.DeactivatedAt != null)
+            {
+                student.DeactivatedAt = null;
+            }
 
             await _studentRepository.UpdateAsync(student);
             await _studentRepository.SaveChangesAsync();
@@ -156,14 +286,36 @@ namespace CampusServicePortal.Services.Implementation
                 IsActive = student.IsActive,
                 CreatedDate = student.User?.CreatedDate ?? DateTime.MinValue,
                 IndexNumber = student.IndexNumber,
-                Faculty = student.Faculty,
+                Faculty = student.FacultyNav?.Name ?? student.Faculty,
                 DegreeProgram = student.DegreeProgram,
                 EnrollmentYear = student.EnrollmentYear,
                 ContactNumber = student.ContactNumber,
                 Address = student.Address,
                 DeactivatedAt = student.DeactivatedAt,
-                Role = student.User?.Role?.RoleName ?? "Student"
+                Role = student.User?.Role?.RoleName ?? "Student",
+                // Placeholder until Modules 2–8 wire real data into CheckDeactivationBlockers / profile.
+                ActivitySummary = new StudentActivitySummaryDto()
             };
+        }
+
+        private async Task<Faculty?> ResolveFacultyAsync(string? facultyName)
+        {
+            if (string.IsNullOrWhiteSpace(facultyName))
+                return null;
+
+            var existing = await _facultyRepository.GetByNameAsync(facultyName.Trim());
+            if (existing != null)
+                return existing;
+
+            var faculty = new Faculty
+            {
+                Name = facultyName.Trim(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _facultyRepository.AddAsync(faculty);
+            await _facultyRepository.SaveChangesAsync();
+            return faculty;
         }
     }
 }

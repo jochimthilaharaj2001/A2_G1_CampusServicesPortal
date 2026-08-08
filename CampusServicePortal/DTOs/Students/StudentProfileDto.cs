@@ -28,5 +28,10 @@ namespace CampusServicePortal.DTOs.Students
 
         // Role
         public string Role { get; set; } = "Student";
+
+        /// <summary>
+        /// Summary of activity across other modules (empty until Modules 2–8 exist).
+        /// </summary>
+        public StudentActivitySummaryDto ActivitySummary { get; set; } = new();
     }
 }

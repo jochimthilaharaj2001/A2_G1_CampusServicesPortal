@@ -20,7 +20,7 @@
   // Redirect based on auth state
   if (Auth.isLoggedIn()) {
     const user = Auth.getUser();
-    window.location.href = user?.role === 'Admin' ? '/admin/students.html' : '/profile.html';
+    window.location.href = user?.role === 'Admin' ? '/admin/index.html' : '/profile.html';
   } else {
     window.location.href = '/login.html';
   }

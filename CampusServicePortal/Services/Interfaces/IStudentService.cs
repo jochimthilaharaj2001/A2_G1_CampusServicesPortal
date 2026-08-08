@@ -12,5 +12,7 @@ namespace CampusServicePortal.Services.Interfaces
         Task DeactivateStudentAsync(int studentId);
         Task ReactivateStudentAsync(int studentId);
         Task<List<string>> CheckDeactivationBlockersAsync(int studentId);
+        Task<StudentProfileDto> CreateStudentByAdminAsync(AdminCreateStudentDto dto);
+        Task<StudentProfileDto> UpdateStudentByAdminAsync(int studentId, AdminUpdateStudentDto dto);
     }
 }

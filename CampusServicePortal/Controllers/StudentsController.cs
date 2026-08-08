@@ -11,14 +11,13 @@ namespace CampusServicePortal.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly IStudentService _studentService;
+        private readonly IAuthService _authService;
 
         public StudentsController(IStudentService studentService, IAuthService authService)
         {
             _studentService = studentService;
             _authService = authService;
         }
-
-        private readonly IAuthService _authService;
 
         // POST: api/students/register
         [HttpPost("register")]
@@ -40,8 +39,27 @@ namespace CampusServicePortal.Controllers
             }
         }
 
+        // GET: api/students/me — current authenticated student's profile
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            try
+            {
+                var profile = await ResolveCurrentStudentProfileAsync();
+                if (profile == null)
+                    return NotFound(new { message = "No student profile is linked to this account." });
+
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // GET: api/students/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [Authorize]
         public async Task<IActionResult> GetProfile(int id)
         {
@@ -51,17 +69,8 @@ namespace CampusServicePortal.Controllers
                 if (profile == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
 
-                // Non-admin students can only view their own profile
-                var userRole = User.FindFirstValue(ClaimTypes.Role);
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-                
-                if (userRole == "Student" && userIdClaim != null)
-                {
-                    if (int.TryParse(userIdClaim, out int currentUserId) && currentUserId != profile.UserId)
-                    {
-                        return Forbid();
-                    }
-                }
+                if (!CanAccessStudent(profile.UserId))
+                    return Forbid();
 
                 return Ok(profile);
             }
@@ -72,7 +81,7 @@ namespace CampusServicePortal.Controllers
         }
 
         // PUT: api/students/{id}
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileDto dto)
         {
@@ -82,17 +91,8 @@ namespace CampusServicePortal.Controllers
                 if (existingProfile == null)
                     return NotFound(new { message = $"Student with ID {id} was not found." });
 
-                // Students can only update their own profile
-                var userRole = User.FindFirstValue(ClaimTypes.Role);
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-
-                if (userRole == "Student" && userIdClaim != null)
-                {
-                    if (int.TryParse(userIdClaim, out int currentUserId) && currentUserId != existingProfile.UserId)
-                    {
-                        return Forbid();
-                    }
-                }
+                if (!CanAccessStudent(existingProfile.UserId))
+                    return Forbid();
 
                 var updated = await _studentService.UpdateProfileAsync(id, dto);
                 return Ok(updated);
@@ -134,8 +134,8 @@ namespace CampusServicePortal.Controllers
             }
         }
 
-        // DELETE: api/students/{id} (Admin only soft delete / deactivation)
-        [HttpDelete("{id}")]
+        // DELETE: api/students/{id} — soft deactivate (admin); BRD also exposes PUT deactivate
+        [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateStudent(int id)
         {
@@ -156,6 +156,33 @@ namespace CampusServicePortal.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        private bool CanAccessStudent(int profileUserId)
+        {
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            if (userRole == "Admin")
+                return true;
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            return int.TryParse(userIdClaim, out int currentUserId) && currentUserId == profileUserId;
+        }
+
+        private async Task<StudentProfileDto?> ResolveCurrentStudentProfileAsync()
+        {
+            var studentIdClaim = User.FindFirstValue("studentId");
+            if (int.TryParse(studentIdClaim, out int studentId) && studentId > 0)
+            {
+                var byStudentId = await _studentService.GetProfileAsync(studentId);
+                if (byStudentId != null)
+                    return byStudentId;
+            }
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (int.TryParse(userIdClaim, out int userId))
+                return await _studentService.GetProfileByUserIdAsync(userId);
+
+            return null;
         }
 
         // PUT: api/admin/students/{id}/deactivate

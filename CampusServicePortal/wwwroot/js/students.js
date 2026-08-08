@@ -18,16 +18,14 @@ if (document.getElementById('profile-page')) {
     })();
 
     async function loadProfile() {
-        const user = Auth.getUser();
         const loadingEl = document.getElementById('profile-loading');
         const contentEl = document.getElementById('profile-content');
 
         if (loadingEl) loadingEl.style.display = 'flex';
 
         try {
-            // Get student id from user's studentId stored at login
-            // Since we only have userId in the token, we fetch by userId via index
-            const res = await api.get(`/api/students/${user.userId}`, true);
+            // Prefer /me so userId is never mistaken for studentId
+            const res = await api.get('/api/students/me', true);
             if (res.ok) {
                 currentStudent = res.data;
                 renderProfile(currentStudent);
@@ -66,6 +64,8 @@ if (document.getElementById('profile-page')) {
         setField('field-address',  student.address || '—');
         setField('field-joined',   formatDate(student.createdDate));
 
+        renderActivitySummary(student.activitySummary);
+
         // Form defaults
         if (document.getElementById('edit-fullname'))
             document.getElementById('edit-fullname').value  = student.fullName || '';
@@ -77,6 +77,44 @@ if (document.getElementById('profile-page')) {
             document.getElementById('edit-address').value   = student.address || '';
         if (document.getElementById('edit-degree'))
             document.getElementById('edit-degree').value    = student.degreeProgram || '';
+    }
+
+    function renderActivitySummary(summary) {
+        const container = document.getElementById('activity-summary');
+        if (!container) return;
+
+        const sections = [
+            { key: 'hostelApplications', label: 'Hostel Applications' },
+            { key: 'labBookings', label: 'Lab Bookings' },
+            { key: 'eventRegistrations', label: 'Event Registrations' },
+            { key: 'certificateRequests', label: 'Certificate Requests' },
+            { key: 'complaints', label: 'Complaints' },
+            { key: 'feePayments', label: 'Fees' }
+        ];
+
+        const data = summary || {};
+        const unread = data.unreadNotifications ?? 0;
+
+        const cards = sections.map(({ key, label }) => {
+            const items = data[key] || [];
+            const latest = items[0];
+            const statusText = latest
+                ? `${latest.status}${latest.title ? ` — ${latest.title}` : ''}`
+                : 'No activity yet';
+            return `
+                <div class="profile-field">
+                  <div class="field-label">${label} (${items.length})</div>
+                  <div class="field-value" style="font-size:0.9rem;color:var(--text-secondary);">${escHtml(statusText)}</div>
+                </div>`;
+        }).join('');
+
+        container.innerHTML = `
+            <h3 style="font-size:1rem;font-weight:600;margin:1.5rem 0 0.75rem;">Activity Summary</h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">
+              Cross-module overview. Modules not yet built will show empty until available.
+              Unread notifications: <strong>${unread}</strong>
+            </p>
+            <div class="profile-grid">${cards}</div>`;
     }
 
     function setField(id, value) {
@@ -166,8 +204,33 @@ if (document.getElementById('students-admin-page')) {
     (async () => {
         if (!Auth.requireAdmin()) return;
         UI.initNavbar();
+        await populateFacultySelects();
         await loadStudents();
     })();
+
+    async function populateFacultySelects() {
+        try {
+            const res = await api.get('/api/faculties?activeOnly=true', true);
+            if (!res.ok) return;
+            const items = res.data || [];
+            const filter = document.getElementById('faculty-filter');
+            const create = document.getElementById('create-faculty');
+            items.forEach(f => {
+                if (filter) {
+                    const opt = document.createElement('option');
+                    opt.value = f.name;
+                    opt.textContent = f.name;
+                    filter.appendChild(opt);
+                }
+                if (create) {
+                    const opt = document.createElement('option');
+                    opt.value = f.name;
+                    opt.textContent = f.name;
+                    create.appendChild(opt);
+                }
+            });
+        } catch { /* keep empty selects */ }
+    }
 
     // Search on input change (debounced)
     let debounceTimer;
@@ -350,6 +413,52 @@ if (document.getElementById('students-admin-page')) {
     }
 
     window.goToPage = (page) => { currentPage = page; loadStudents(); };
+
+    // Create Modal Functions
+    window.openCreateModal = () => {
+        document.getElementById('create-modal').classList.add('show');
+        document.getElementById('create-form').reset();
+        UI.hideAlert('create-alert');
+    };
+
+    window.closeCreateModal = () => {
+        document.getElementById('create-modal').classList.remove('show');
+    };
+
+    document.getElementById('create-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('create-submit-btn');
+        UI.setLoading(btn, true);
+        UI.hideAlert('create-alert');
+
+        const dto = {
+            indexNumber: document.getElementById('create-index').value.trim(),
+            fullName: document.getElementById('create-fullname').value.trim(),
+            email: document.getElementById('create-email').value.trim(),
+            password: document.getElementById('create-password').value,
+            faculty: document.getElementById('create-faculty').value,
+            degreeProgram: document.getElementById('create-degree').value.trim(),
+            enrollmentYear: parseInt(document.getElementById('create-year').value),
+            phoneNumber: document.getElementById('create-phone').value.trim() || null,
+            contactNumber: document.getElementById('create-contact').value.trim() || null,
+            address: document.getElementById('create-address').value.trim() || null
+        };
+
+        try {
+            const res = await api.post('/api/admin/students', dto, true);
+            if (res.ok) {
+                UI.toast('success', 'Student created successfully');
+                closeCreateModal();
+                loadStudents();
+            } else {
+                UI.showAlert('create-alert', 'error', res.data?.message || 'Creation failed');
+            }
+        } catch {
+            UI.showAlert('create-alert', 'error', 'Server error. Please try again.');
+        } finally {
+            UI.setLoading(btn, false);
+        }
+    });
 
     // Logout
     document.getElementById('logout-btn')?.addEventListener('click', () => Auth.logout());
