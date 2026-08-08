@@ -20,11 +20,15 @@ if (document.getElementById('login-form')) {
 
         const email = document.getElementById('email');
         const password = document.getElementById('password');
+        const role = document.getElementById('selected-role').value;
         let valid = true;
 
-        if (!Validate.email(email.value)) {
+        if (role === 'Student' && !Validate.email(email.value)) {
             Validate.showError(email, 'Please enter a valid email address.'); valid = false;
+        } else if (role === 'Admin' && !email.value.trim()) {
+            Validate.showError(email, 'Username is required.'); valid = false;
         }
+
         if (!Validate.required(password.value)) {
             Validate.showError(password, 'Password is required.'); valid = false;
         }
@@ -32,21 +36,30 @@ if (document.getElementById('login-form')) {
 
         UI.setLoading(btnEl, true);
         try {
-            const res = await api.post('/api/auth/login', {
-                email: email.value.trim(),
-                password: password.value
-            });
+            const payload = {
+                password: password.value,
+                role: role
+            };
+
+            if (role === 'Student') {
+                payload.email = email.value.trim();
+            } else {
+                payload.username = email.value.trim();
+            }
+
+            const res = await api.post('/api/auth/login', payload);
 
             if (res.ok) {
                 Auth.setToken(res.data.token);
                 Auth.setUser({
                     userId: res.data.userId,
+                    studentId: res.data.studentId || null,
                     fullName: res.data.fullName,
                     email: res.data.email,
                     role: res.data.role
                 });
                 window.location.href = res.data.role === 'Admin'
-                    ? '/admin/students.html'
+                    ? '/admin/index.html'
                     : '/profile.html';
             } else {
                 const msg = res.data?.message || 'Invalid email or password.';

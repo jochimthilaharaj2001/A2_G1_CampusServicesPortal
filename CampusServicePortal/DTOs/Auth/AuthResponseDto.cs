@@ -4,6 +4,9 @@ namespace CampusServicePortal.DTOs.Auth
     {
         public int UserId { get; set; }
 
+        /// <summary>Student record id when the user is a student; null for Admin.</summary>
+        public int? StudentId { get; set; }
+
         public string FullName { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;

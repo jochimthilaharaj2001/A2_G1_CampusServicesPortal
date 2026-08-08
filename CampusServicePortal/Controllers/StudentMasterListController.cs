@@ -1,10 +1,11 @@
 using CampusServicePortal.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace CampusServicePortal.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/student-master")]
     [ApiController]
     public class StudentMasterListController : ControllerBase
     {
@@ -17,7 +18,7 @@ namespace CampusServicePortal.Controllers
 
         // GET: api/student-master/{indexNumber}
         // Public endpoint called during registration step to verify an index number
-        [HttpGet("/api/student-master/{indexNumber}")]
+        [HttpGet("{indexNumber}")]
         [AllowAnonymous]
         public async Task<IActionResult> VerifyIndexNumber(string indexNumber)
         {
@@ -38,7 +39,7 @@ namespace CampusServicePortal.Controllers
 
         // GET: api/student-master?search=
         // Admin search of master list
-        [HttpGet("/api/student-master")]
+        [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> SearchMasterList([FromQuery] string? search)
         {
@@ -55,7 +56,7 @@ namespace CampusServicePortal.Controllers
 
         // POST: api/student-master/import
         // Admin CSV bulk import
-        [HttpPost("/api/student-master/import")]
+        [HttpPost("import")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ImportMasterList(IFormFile file)
         {

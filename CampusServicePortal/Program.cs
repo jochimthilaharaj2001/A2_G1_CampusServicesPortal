@@ -90,6 +90,8 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IStudentRepository, StudentRepository>();
             builder.Services.AddScoped<IStudentMasterListRepository, StudentMasterListRepository>();
             builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+            builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
+            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
 
             // Service DI
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -97,8 +99,17 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IStudentMasterListService, StudentMasterListService>();
             builder.Services.AddScoped<IStudentService, StudentService>();
+            builder.Services.AddScoped<IFacultyService, FacultyService>();
+            builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
 
             var app = builder.Build();
+
+            // Idempotent development seed: default admin account, master list samples, demo student.
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                DatabaseSeeder.Seed(db);
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -110,7 +121,8 @@ namespace CampusServicePortal
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            app.UseHttpsRedirection();
+            // Comment out HTTPS redirection for testing
+            // app.UseHttpsRedirection();
 
             // Authentication must come before Authorization
             app.UseAuthentication();

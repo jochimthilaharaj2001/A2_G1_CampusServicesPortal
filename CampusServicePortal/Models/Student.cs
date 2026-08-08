@@ -13,6 +13,9 @@ namespace CampusServicePortal.Models
         [MaxLength(50)]
         public string IndexNumber { get; set; } = string.Empty;
 
+        /// <summary>FK to Faculties (Module 9). Nullable for legacy rows until backfilled.</summary>
+        public int? FacultyId { get; set; }
+
         [MaxLength(100)]
         public string Faculty { get; set; } = string.Empty;
 
@@ -31,10 +34,8 @@ namespace CampusServicePortal.Models
         public bool IsActive { get; set; } = true;
         public DateTime? DeactivatedAt { get; set; }
 
-        // Email verification fields (stored on User, linked here for context)
-        // Note: EmailVerified lives on User entity but is also surfaced here for convenience
-
         // Navigation properties
         public User? User { get; set; }
+        public Faculty? FacultyNav { get; set; }
     }
 }

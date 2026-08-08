@@ -16,6 +16,7 @@ namespace CampusServicePortal.Services.Implementation
         private readonly IStudentMasterListRepository _masterListRepository;
         private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
         private readonly IEmailService _emailService;
+        private readonly IFacultyRepository _facultyRepository;
         private readonly IConfiguration _configuration;
 
         public AuthService(
@@ -23,12 +24,14 @@ namespace CampusServicePortal.Services.Implementation
             IStudentMasterListRepository masterListRepository,
             IPasswordResetTokenRepository passwordResetTokenRepository,
             IEmailService emailService,
+            IFacultyRepository facultyRepository,
             IConfiguration configuration)
         {
             _authRepository = authRepository;
             _masterListRepository = masterListRepository;
             _passwordResetTokenRepository = passwordResetTokenRepository;
             _emailService = emailService;
+            _facultyRepository = facultyRepository;
             _configuration = configuration;
         }
 
@@ -76,11 +79,13 @@ namespace CampusServicePortal.Services.Implementation
             await _authRepository.SaveChangesAsync();
 
             // 5. Create Student record — Faculty pre-filled from master list
+            var faculty = await ResolveFacultyAsync(masterRecord.Faculty);
             var student = new Student
             {
                 UserId = user.UserId,
                 IndexNumber = dto.IndexNumber,
-                Faculty = masterRecord.Faculty,
+                FacultyId = faculty?.FacultyId,
+                Faculty = faculty?.Name ?? masterRecord.Faculty,
                 DegreeProgram = dto.DegreeProgram,
                 EnrollmentYear = dto.EnrollmentYear,
                 ContactNumber = dto.PhoneNumber,
@@ -95,20 +100,13 @@ namespace CampusServicePortal.Services.Implementation
             await _authRepository.SaveChangesAsync();
 
             // 7. Send verification email
-            try
-            {
-                await _emailService.SendVerificationEmailAsync(
-                    user.Email, user.FullName, verificationToken);
-            }
-            catch (Exception)
-            {
-                // Registration still succeeds even if email fails.
-                // Student can request a resend via /api/auth/resend-verification.
-            }
+            await _emailService.SendVerificationEmailAsync(
+                user.Email, user.FullName, verificationToken);
 
             return new AuthResponseDto
             {
                 UserId = user.UserId,
+                StudentId = user.Student?.StudentId,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = "Student",
@@ -123,8 +121,28 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
         {
-            var user = await _authRepository.GetUserByEmailAsync(dto.Email);
-            if (user == null) return null;
+            User? user = null;
+
+            if (dto.Role == "Admin")
+            {
+                if (string.IsNullOrWhiteSpace(dto.Username))
+                    throw new UnauthorizedAccessException("Username is required for admin login.");
+                
+                user = await _authRepository.GetUserByUsernameAsync(dto.Username);
+                
+                if (user == null || user.Role?.RoleName != "Admin")
+                    throw new UnauthorizedAccessException("Invalid admin username or password.");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(dto.Email))
+                    throw new UnauthorizedAccessException("Email is required for student login.");
+                
+                user = await _authRepository.GetUserByEmailAsync(dto.Email);
+                
+                if (user == null || user.Role?.RoleName != "Student")
+                    throw new UnauthorizedAccessException("Invalid email or password.");
+            }
 
             bool passwordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
             if (!passwordValid) return null;
@@ -145,6 +163,7 @@ namespace CampusServicePortal.Services.Implementation
             return new AuthResponseDto
             {
                 UserId = user.UserId,
+                StudentId = user.Student?.StudentId,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role?.RoleName ?? "Student",
@@ -303,5 +322,24 @@ namespace CampusServicePortal.Services.Implementation
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        private async Task<Faculty?> ResolveFacultyAsync(string? facultyName)
+        {
+            if (string.IsNullOrWhiteSpace(facultyName))
+                return null;
+
+            var existing = await _facultyRepository.GetByNameAsync(facultyName.Trim());
+            if (existing != null)
+                return existing;
+
+            var faculty = new Faculty
+            {
+                Name = facultyName.Trim(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _facultyRepository.AddAsync(faculty);
+            await _facultyRepository.SaveChangesAsync();
+            return faculty;
+        }
     }
 }

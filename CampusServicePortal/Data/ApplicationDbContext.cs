@@ -1,4 +1,4 @@
-using CampusServicePortal.Models;
+    using CampusServicePortal.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusServicePortal.Data
@@ -15,6 +15,8 @@ namespace CampusServicePortal.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<StudentMasterList> StudentMasterList { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<Faculty> Faculties { get; set; }
+        public DbSet<CertificateType> CertificateTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +42,12 @@ namespace CampusServicePortal.Data
                 .HasIndex(s => s.IndexNumber)
                 .IsUnique();
 
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.FacultyNav)
+                .WithMany(f => f.Students)
+                .HasForeignKey(s => s.FacultyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ── RefreshToken ──────────────────────────────────────────────────────
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(rt => rt.User)
@@ -57,10 +65,35 @@ namespace CampusServicePortal.Data
                 .HasIndex(sml => sml.IndexNumber)
                 .IsUnique();
 
+            // ── Faculty ───────────────────────────────────────────────────────────
+            modelBuilder.Entity<Faculty>()
+                .HasIndex(f => f.Name)
+                .IsUnique();
+
+            // ── CertificateType ───────────────────────────────────────────────────
+            modelBuilder.Entity<CertificateType>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
             // ── Role Seed Data ────────────────────────────────────────────────────
             modelBuilder.Entity<Role>().HasData(
                 new Role { RoleId = 1, RoleName = "Admin" },
                 new Role { RoleId = 2, RoleName = "Student" }
+            );
+
+            // ── Module 9 seed data ────────────────────────────────────────────────
+            modelBuilder.Entity<Faculty>().HasData(
+                new Faculty { FacultyId = 1, Name = "Computing", Code = "COMP", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Faculty { FacultyId = 2, Name = "Engineering", Code = "ENG", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Faculty { FacultyId = 3, Name = "Business", Code = "BUS", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Faculty { FacultyId = 4, Name = "Science", Code = "SCI", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Faculty { FacultyId = 5, Name = "Arts", Code = "ARTS", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            modelBuilder.Entity<CertificateType>().HasData(
+                new CertificateType { CertificateTypeId = 1, Name = "Bonafide Certificate", Description = "Confirms student enrolment status", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new CertificateType { CertificateTypeId = 2, Name = "Transcript", Description = "Academic transcript of results", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new CertificateType { CertificateTypeId = 3, Name = "Completion Letter", Description = "Confirms programme completion", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
             );
         }
     }

@@ -11,6 +11,9 @@ namespace CampusServicePortal.Models
         [MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
 
+        [MaxLength(100)]
+        public string? Username { get; set; }
+
         [Required]
         [MaxLength(256)]
         public string Email { get; set; } = string.Empty;

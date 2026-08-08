@@ -19,6 +19,7 @@ namespace CampusServicePortal.Repositories.Implementation
             return await _context.Students
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)
+                .Include(s => s.FacultyNav)
                 .FirstOrDefaultAsync(s => s.StudentId == studentId);
         }
 
@@ -27,6 +28,7 @@ namespace CampusServicePortal.Repositories.Implementation
             return await _context.Students
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)
+                .Include(s => s.FacultyNav)
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
 
@@ -43,6 +45,7 @@ namespace CampusServicePortal.Repositories.Implementation
             var query = _context.Students
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)
+                .Include(s => s.FacultyNav)
                 .AsQueryable();
 
             // Filter by name, index number, or email

@@ -1,90 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Login — Campus Services Portal</title>
-<meta name="description" content="Sign in to the Campus Services Portal to manage your university services."/>
-<link rel="stylesheet" href="/css/style.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Campus Services Portal</title>
+  <meta name="description" content="Sign in to the Campus Services Portal to manage your university services." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Admin mode banner */
+    .admin-mode-banner {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.9rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--primary-light, #a5b4fc);
+    }
+    .admin-mode-banner.visible {
+      display: flex;
+    }
+    .admin-mode-banner .banner-icon { font-size: 1rem; }
+    .admin-mode-banner .banner-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .admin-mode-banner .banner-close:hover { color: var(--text-primary); }
+
+    /* Admin access button at the bottom */
+    .admin-access-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.02em;
+    }
+    .admin-access-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary-light, #a5b4fc);
+      background: rgba(99, 102, 241, 0.08);
+    }
+    .admin-access-btn .btn-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+  </style>
 </head>
+
 <body>
-<div class="page-bg"></div>
+  <div class="page-bg"></div>
 
-<div class="auth-wrapper">
-  <!-- Left: Branding -->
-  <div class="auth-brand">
-    <div class="brand-content">
-      <div class="brand-logo">🎓</div>
-      <h1 class="brand-title">Campus Services<br/>Portal</h1>
-      <p class="brand-subtitle">Your one-stop destination for all university services — hostels, labs, events, certificates and more.</p>
-      <div class="brand-features">
-        <div class="brand-feature"><span>🏠</span><span>Hostel Accommodation Booking</span></div>
-        <div class="brand-feature"><span>🔬</span><span>Lab Resource Reservations</span></div>
-        <div class="brand-feature"><span>🎉</span><span>Campus Event Registrations</span></div>
-        <div class="brand-feature"><span>📜</span><span>Certificate Requests</span></div>
+  <div class="auth-wrapper">
+    <!-- Left: Branding Side -->
+    <div class="auth-brand">
+      <div class="brand-content">
+        <div class="brand-logo">🎓</div>
+        <h1 class="brand-title">Campus Services<br />Portal</h1>
+        <p class="brand-subtitle">Your one-stop destination for all university services — hostels, labs, events,
+          certificates and more.</p>
+        <div class="brand-features">
+          <div class="brand-feature"><span>🏠</span><span>Hostel Accommodation Booking</span></div>
+          <div class="brand-feature"><span>🔬</span><span>Lab Resource Reservations</span></div>
+          <div class="brand-feature"><span>🎉</span><span>Campus Event Registrations</span></div>
+          <div class="brand-feature"><span>📜</span><span>Certificate Requests</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Form Side -->
+    <div class="auth-form-side">
+      <div class="auth-card">
+
+        <div class="auth-card-header">
+          <h1 id="portal-title">Welcome back</h1>
+          <p id="portal-subtitle">Sign in to access your student portal</p>
+        </div>
+
+        <!-- Admin mode active banner -->
+        <div class="admin-mode-banner" id="admin-banner">
+          <span class="banner-icon">🛡️</span>
+          <span>Admin mode — sign in with your administrator credentials</span>
+          <button class="banner-close" onclick="switchPortal('Student')" title="Switch back to student login">✕</button>
+        </div>
+
+        <div id="login-alert" class="alert global-alert" role="alert"></div>
+
+        <form id="login-form" novalidate>
+          <input type="hidden" id="selected-role" name="role" value="Student" />
+
+          <div class="form-group">
+            <label for="email" id="email-label">Email Address</label>
+            <div class="input-wrapper has-icon">
+              <input id="email" type="email" placeholder="your.email@university.edu" autocomplete="email" required />
+              <span class="input-icon" id="email-icon">✉</span>
+            </div>
+            <div class="field-error" id="email-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper has-icon">
+              <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password"
+                required />
+              <span class="input-icon">🔒</span>
+            </div>
+            <div class="field-error" id="password-error"></div>
+          </div>
+
+          <div class="flex-between mb-2" style="margin-bottom:1.25rem;">
+            <label
+              style="display:flex;align-items:center;gap:0.5rem;text-transform:none;letter-spacing:0;font-size:0.875rem;cursor:pointer;">
+              <input type="checkbox" id="remember" style="width:auto;padding:0;" />
+              Remember me
+            </label>
+            <a href="/forgot-password.html" class="text-link" style="font-size:0.875rem;">Forgot password?</a>
+          </div>
+
+          <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">
+            <div class="btn-spinner"></div>
+            <span class="btn-label">Sign In</span>
+          </button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <p class="text-center" id="register-row" style="color:var(--text-secondary);font-size:0.9rem;">
+          New student?
+          <a href="/register.html" class="text-link">Create an account</a>
+        </p>
+
+        <p class="text-center mt-2" style="color:var(--text-muted);font-size:0.78rem;">
+          Need to verify your email?
+          <a href="/verify-email.html" class="text-link">Verify here</a>
+        </p>
+
+        <!-- Discrete Admin Access button -->
+        <div class="text-center mt-2" id="admin-btn-row" style="margin-top:1.25rem;">
+          <button type="button" class="admin-access-btn" onclick="switchPortal('Admin')" id="admin-access-btn">
+            <span class="btn-dot"></span>
+            Admin Access
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- Right: Login Form -->
-  <div class="auth-form-side">
-    <div class="auth-card">
-      <div class="auth-card-header">
-        <h1>Welcome back</h1>
-        <p>Sign in to access your campus portal</p>
-      </div>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js?v=1.1"></script>
+  <script>
+    function switchPortal(role) {
+      document.getElementById('selected-role').value = role;
 
-      <div id="login-alert" class="alert global-alert" role="alert"></div>
-
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <div class="input-wrapper has-icon">
-            <input id="email" type="email" placeholder="your.email@university.edu" autocomplete="email" required/>
-            <span class="input-icon">✉</span>
-          </div>
-          <div class="field-error" id="email-error"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="input-wrapper has-icon">
-            <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required/>
-            <span class="input-icon">🔒</span>
-          </div>
-          <div class="field-error" id="password-error"></div>
-        </div>
-
-        <div class="flex-between mb-2" style="margin-bottom:1.25rem;">
-          <label style="display:flex;align-items:center;gap:0.5rem;text-transform:none;letter-spacing:0;font-size:0.875rem;cursor:pointer;">
-            <input type="checkbox" id="remember" style="width:auto;padding:0;"/>
-            Remember me
-          </label>
-          <a href="/forgot-password.html" class="text-link" style="font-size:0.875rem;">Forgot password?</a>
-        </div>
-
-        <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">
-          <div class="btn-spinner"></div>
-          <span class="btn-label">Sign In</span>
-        </button>
-      </form>
-
-      <div class="divider">or</div>
-
-      <p class="text-center" style="color:var(--text-secondary);font-size:0.9rem;">
-        New student?
-        <a href="/register.html" class="text-link">Create an account</a>
-      </p>
-
-      <p class="text-center mt-2" style="color:var(--text-muted);font-size:0.78rem;">
-        Need to verify your email?
-        <a href="/verify-email.html" class="text-link">Verify here</a>
-      </p>
-    </div>
-  </div>
-</div>
-
-<script src="/js/api.js"></script>
-<script src="/js/auth.js"></script>
+      if (role === 'Student') {
+        // Restore student UI
+        document.getElementById('portal-title').textContent = 'Welcome back';
+        document.getElementById('portal-subtitle').textContent = 'Sign in to access your student portal';
+        document.getElementById('email-label').textContent = 'Email Address';
+        document.getElementById('email-icon').textContent = '✉';
+        document.getElementById('email').type = 'email';
+        document.getElementById('email').placeholder = 'your.email@university.edu';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('register-row').style.display = 'block';
+        document.getElementById('admin-banner').classList.remove('visible');
+        document.getElementById('admin-btn-row').style.display = 'block';
+        document.getElementById('login-btn').querySelector('.btn-label').textContent = 'Sign In';
+      } else {
+        // Switch to admin UI
+        document.getElementById('portal-title').textContent = 'Admin Portal';
+        document.getElementById('portal-subtitle').textContent = '';
+        document.getElementById('email-label').textContent = 'Username';
+        document.getElementById('email-icon').textContent = '🛡️';
+        document.getElementById('email').type = 'text';
+        document.getElementById('email').placeholder = 'Enter admin username';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('register-row').style.display = 'none';
+        document.getElementById('admin-banner').classList.add('visible');
+        document.getElementById('admin-btn-row').style.display = 'none';
+        document.getElementById('login-btn').querySelector('.btn-label').textContent = 'Admin Sign In';
+      }
+    }
+  </script>
 </body>
+
 </html>
