@@ -184,5 +184,65 @@ namespace CampusServicePortal.Controllers
 
             return null;
         }
+
+        // PUT: api/admin/students/{id}/deactivate
+        [HttpPut("/api/admin/students/{id}/deactivate")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminDeactivateStudent(int id)
+        {
+            try
+            {
+                await _studentService.DeactivateStudentAsync(id);
+                return Ok(new { message = "Student account deactivated successfully." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // PUT: api/admin/students/{id}/reactivate
+        [HttpPut("/api/admin/students/{id}/reactivate")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminReactivateStudent(int id)
+        {
+            try
+            {
+                await _studentService.ReactivateStudentAsync(id);
+                return Ok(new { message = "Student account reactivated successfully." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // GET: api/admin/students/{id}/deactivation-check
+        [HttpGet("/api/admin/students/{id}/deactivation-check")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CheckDeactivation(int id)
+        {
+            try
+            {
+                var blockers = await _studentService.CheckDeactivationBlockersAsync(id);
+                return Ok(new
+                {
+                    canDeactivate = !blockers.Any(),
+                    blockingReasons = blockers
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
