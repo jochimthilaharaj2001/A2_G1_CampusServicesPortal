@@ -24,6 +24,11 @@ namespace CampusServicePortal.Data
         public DbSet<Complaint> Complaints { get; set; }
         public DbSet<FeeType> FeeTypes { get; set; }
         public DbSet<FeePayment> FeePayments { get; set; }
+        public DbSet<Venue> Venues { get; set; }
+        public DbSet<CampusEvent> Events { get; set; }
+        public DbSet<EventSeat> EventSeats { get; set; }
+        public DbSet<EventRegistration> EventRegistrations { get; set; }
+        public DbSet<CertificateRequest> CertificateRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -119,6 +124,30 @@ namespace CampusServicePortal.Data
                 .HasOne(f => f.User)
                 .WithMany(u => u.FeePayments)
                 .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Venue>().HasIndex(v => v.Name).IsUnique();
+            modelBuilder.Entity<CampusEvent>()
+                .HasOne(e => e.Venue).WithMany(v => v.Events).HasForeignKey(e => e.VenueId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<EventSeat>()
+                .HasOne(s => s.Event).WithMany(e => e.EventSeats).HasForeignKey(s => s.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<EventSeat>().HasIndex(s => new { s.EventId, s.SeatNumber }).IsUnique();
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.Event).WithMany(e => e.EventRegistrations).HasForeignKey(r => r.EventId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.User).WithMany(u => u.EventRegistrations).HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.Seat).WithMany(s => s.Registrations).HasForeignKey(r => r.EventSeatId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<CertificateRequest>()
+                .HasOne(r => r.User).WithMany(u => u.CertificateRequests).HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<CertificateRequest>()
+                .HasOne(r => r.CertificateType).WithMany(t => t.CertificateRequests).HasForeignKey(r => r.CertificateTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<FeePayment>()

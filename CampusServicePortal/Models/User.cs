@@ -54,5 +54,11 @@ namespace CampusServicePortal.Models
 
         public ICollection<FeePayment> FeePayments { get; set; }
             = new List<FeePayment>();
+
+        public ICollection<EventRegistration> EventRegistrations { get; set; }
+            = new List<EventRegistration>();
+
+        public ICollection<CertificateRequest> CertificateRequests { get; set; }
+            = new List<CertificateRequest>();
     }
 }

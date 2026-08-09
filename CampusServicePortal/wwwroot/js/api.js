@@ -187,25 +187,35 @@ const UI = {
         }
     },
 
-    /** Keep every admin page on the same navigation menu. */
+    /** Keep each role on a consistent navigation menu. */
     normalizeNavigation() {
-        if (!Auth.isAdmin()) return;
-
         const navbar = document.querySelector('.navbar');
         const links = navbar?.querySelector('.nav-links');
         if (!navbar || !links) return;
 
-        navbar.classList.add('admin-navbar');
+        const isAdmin = Auth.isAdmin();
+        navbar.classList.toggle('admin-navbar', isAdmin);
         const currentPath = window.location.pathname.toLowerCase();
-        const items = [
+        const adminItems = [
             ['/admin/index.html', 'Dashboard'],
             ['/admin/students.html', 'Students'],
             ['/admin/labs.html', 'Labs'],
+            ['/admin/events.html', 'Events'],
             ['/admin/master-list.html', 'Master List'],
             ['/admin/master-data.html', 'Master Data'],
             ['/admin/complaints.html', 'Complaints'],
+            ['/admin/certificates.html', 'Certificates'],
             ['/admin/fees.html', 'Fees']
         ];
+        const studentItems = [
+            ['/dashboard.html', 'Dashboard'],
+            ['/labs.html', 'Lab Reservations'],
+            ['/events.html', 'Events'],
+            ['/complaints.html', 'Complaints'],
+            ['/certificates.html', 'Certificates'],
+            ['/fees.html', 'Fees']
+        ];
+        const items = isAdmin ? adminItems : studentItems;
 
         links.innerHTML = items.map(([href, label]) => {
             const active = currentPath === href || (href === '/admin/students.html' && currentPath === '/admin/student-detail.html');

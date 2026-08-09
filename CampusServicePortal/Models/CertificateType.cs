@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace CampusServicePortal.Models
 {
     /// <summary>BRD Module 9 — certificate types master data.</summary>
-    public class CertificateType
+public class CertificateType
     {
         [Key]
         public int CertificateTypeId { get; set; }
@@ -19,6 +19,8 @@ namespace CampusServicePortal.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime? UpdatedAt { get; set; }
-    }
+    public DateTime? UpdatedAt { get; set; }
+
+    public ICollection<CertificateRequest> CertificateRequests { get; set; } = new List<CertificateRequest>();
+}
 }
