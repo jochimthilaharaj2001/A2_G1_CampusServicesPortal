@@ -9,24 +9,35 @@ namespace CampusServicePortal.Repositories.Implementation
     {
         private readonly ApplicationDbContext _context;
 
+
         public UserRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
+
+
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .AsNoTracking()
                 .ToListAsync();
         }
+
+
+
 
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
+
+
+
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -35,17 +46,28 @@ namespace CampusServicePortal.Repositories.Implementation
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+
+
+
         public async Task UpdateUserAsync(User user)
         {
             _context.Users.Update(user);
+
             await Task.CompletedTask;
         }
+
+
+
 
         public async Task DeleteUserAsync(User user)
         {
             _context.Users.Remove(user);
+
             await Task.CompletedTask;
         }
+
+
+
 
         public async Task SaveChangesAsync()
         {

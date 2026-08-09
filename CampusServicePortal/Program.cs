@@ -1,14 +1,14 @@
 using CampusServicePortal.Data;
-using Microsoft.EntityFrameworkCore;
 using CampusServicePortal.Helpers;
+using CampusServicePortal.Repositories.Implementation;
+using CampusServicePortal.Repositories.Interfaces;
+using CampusServicePortal.Services.Implementation;
 using CampusServicePortal.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using CampusServicePortal.Services.Implementation;
-using CampusServicePortal.Repositories.Interfaces;
-using CampusServicePortal.Repositories.Implementation;
 
 namespace CampusServicePortal
 {
@@ -18,13 +18,12 @@ namespace CampusServicePortal
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.AddControllers();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -61,7 +60,6 @@ namespace CampusServicePortal
                 });
             });
 
-            // JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -71,19 +69,15 @@ namespace CampusServicePortal
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
-
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
                 });
 
-            // Authorization
             builder.Services.AddAuthorization();
 
-            // Helpers & Repositories
             builder.Services.AddScoped<JwtHelper>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -93,7 +87,6 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
             builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
 
-            // Service DI
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
@@ -101,20 +94,18 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IStudentService, StudentService>();
             builder.Services.AddScoped<IFacultyService, FacultyService>();
             builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
-            builder.Services.AddScoped<ILabReservationRepository,LabReservationRepository>();
-            builder.Services.AddScoped<ILabReservationService,LabReservationService>();
+            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
+            builder.Services.AddScoped<ILabReservationService, LabReservationService>();
             builder.Services.AddScoped<ILabService, LabService>();
 
             var app = builder.Build();
 
-            // Idempotent development seed: default admin account, master list samples, demo student.
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 DatabaseSeeder.Seed(db);
             }
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -124,15 +115,10 @@ namespace CampusServicePortal
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            // Comment out HTTPS redirection for testing
-            // app.UseHttpsRedirection();
-
-            // Authentication must come before Authorization
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
             app.Run();
         }
     }

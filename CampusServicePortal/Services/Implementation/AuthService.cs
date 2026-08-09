@@ -11,7 +11,6 @@ namespace CampusServicePortal.Services.Implementation
 {
     public class AuthService : IAuthService
     {
-
         private readonly IAuthRepository _authRepository;
         private readonly IStudentMasterListRepository _masterListRepository;
         private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
@@ -35,39 +34,40 @@ namespace CampusServicePortal.Services.Implementation
             _configuration = configuration;
         }
 
-        // ── Register ─────────────────────────────────────────────────────────────
-
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-            // 1. Validate index number against StudentMasterList (BRD Rule #5)
             var masterRecord = await _masterListRepository.GetByIndexNumberAsync(dto.IndexNumber);
+
             if (masterRecord == null)
+            {
                 throw new InvalidOperationException(
-                    $"Index number '{dto.IndexNumber}' was not found in the university master list. " +
-                    "Please contact the Registrar's office.");
+                    $"Index number '{dto.IndexNumber}' was not found in the university master list.");
+            }
 
             if (masterRecord.IsRegistered)
+            {
                 throw new InvalidOperationException(
                     $"Index number '{dto.IndexNumber}' is already linked to an existing account.");
+            }
 
-            // 2. Check email uniqueness
             var existingUser = await _authRepository.GetUserByEmailAsync(dto.Email);
-            if (existingUser != null)
-                throw new InvalidOperationException("An account with this email address already exists.");
 
-            // 3. Generate email verification token (BRD Rule #16)
+            if (existingUser != null)
+            {
+                throw new InvalidOperationException("An account with this email address already exists.");
+            }
+
             var verificationToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
             var verificationExpiry = DateTime.UtcNow.AddHours(
                 double.Parse(_configuration["TokenSettings:EmailVerificationExpiryHours"] ?? "24"));
 
-            // 4. Create User record — EmailVerified = false until token is confirmed
             var user = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 PhoneNumber = dto.PhoneNumber,
-                RoleId = 2, // Student
+                RoleId = 2,
                 IsActive = true,
                 EmailVerified = false,
                 EmailVerificationToken = verificationToken,
@@ -78,8 +78,8 @@ namespace CampusServicePortal.Services.Implementation
             await _authRepository.AddUserAsync(user);
             await _authRepository.SaveChangesAsync();
 
-            // 5. Create Student record — Faculty pre-filled from master list
             var faculty = await ResolveFacultyAsync(masterRecord.Faculty);
+
             var student = new Student
             {
                 UserId = user.UserId,
@@ -94,71 +94,76 @@ namespace CampusServicePortal.Services.Implementation
             };
 
             await _authRepository.AddStudentAsync(student);
-
-            // 6. Mark master list record as registered (prevents duplicate accounts)
             await _masterListRepository.MarkAsRegisteredAsync(dto.IndexNumber);
             await _authRepository.SaveChangesAsync();
 
-            // 7. Send verification email
             await _emailService.SendVerificationEmailAsync(
-                user.Email, user.FullName, verificationToken);
+                user.Email,
+                user.FullName,
+                verificationToken);
 
             return new AuthResponseDto
             {
                 UserId = user.UserId,
-                StudentId = user.Student?.StudentId,
+                StudentId = student.StudentId,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = "Student",
-                Token = null, // No JWT until email is verified
+                Token = null,
                 Expiration = null,
                 Message = "Registration successful. Please check your email to verify your account before logging in."
             };
-
         }
-
-        // ── Login ─────────────────────────────────────────────────────────────────
 
         public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
         {
-            User? user = null;
+            User? user;
 
             if (dto.Role == "Admin")
             {
                 if (string.IsNullOrWhiteSpace(dto.Username))
+                {
                     throw new UnauthorizedAccessException("Username is required for admin login.");
-                
+                }
+
                 user = await _authRepository.GetUserByUsernameAsync(dto.Username);
-                
+
                 if (user == null || user.Role?.RoleName != "Admin")
+                {
                     throw new UnauthorizedAccessException("Invalid admin username or password.");
+                }
             }
             else
             {
                 if (string.IsNullOrWhiteSpace(dto.Email))
+                {
                     throw new UnauthorizedAccessException("Email is required for student login.");
-                
+                }
+
                 user = await _authRepository.GetUserByEmailAsync(dto.Email);
-                
+
                 if (user == null || user.Role?.RoleName != "Student")
+                {
                     throw new UnauthorizedAccessException("Invalid email or password.");
+                }
             }
 
-            bool passwordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-            if (!passwordValid) return null;
+            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            {
+                return null;
+            }
 
-            // BRD Rule #16: Block login if email not verified (distinct error)
             if (!user.EmailVerified)
+            {
                 throw new UnauthorizedAccessException(
-                    "Your account has not been verified yet. " +
-                    "Please check your email for the verification link, " +
-                    "or request a new one at /api/auth/resend-verification.");
+                    "Your account has not been verified yet. Please check your email for the verification link.");
+            }
 
-            // BRD Module 1.4: Block login if account deactivated (distinct error)
             if (!user.IsActive)
+            {
                 throw new UnauthorizedAccessException(
-                    "Your account has been deactivated. " +
-                    "Please contact the university administration for assistance.");
+                    "Your account has been deactivated. Please contact the university administration.");
+            }
 
             return new AuthResponseDto
             {
@@ -173,23 +178,22 @@ namespace CampusServicePortal.Services.Implementation
             };
         }
 
-        // ── Email Verification ────────────────────────────────────────────────────
-
         public async Task VerifyEmailAsync(string token)
         {
-            // Find user with matching verification token
             var user = await _authRepository.GetUserByVerificationTokenAsync(token);
 
             if (user == null)
+            {
                 throw new InvalidOperationException(
                     "The verification link is invalid or has already been used.");
+            }
 
             if (user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+            {
                 throw new InvalidOperationException(
-                    "The verification link has expired. " +
-                    "Please request a new one at /api/auth/resend-verification.");
+                    "The verification link has expired. Please request a new one.");
+            }
 
-            // Mark email as verified and clear the token
             user.EmailVerified = true;
             user.EmailVerificationToken = null;
             user.EmailVerificationTokenExpiresAt = null;
@@ -202,13 +206,16 @@ namespace CampusServicePortal.Services.Implementation
         {
             var user = await _authRepository.GetUserByEmailAsync(email);
 
-            // Silently return if no account found — prevents account enumeration
-            if (user == null) return;
+            if (user == null)
+            {
+                return;
+            }
 
             if (user.EmailVerified)
+            {
                 throw new InvalidOperationException("This account has already been verified.");
+            }
 
-            // Invalidate old token and generate a new one (BRD Rule: new token invalidates old)
             var newToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
             var expiry = DateTime.UtcNow.AddHours(
                 double.Parse(_configuration["TokenSettings:EmailVerificationExpiryHours"] ?? "24"));
@@ -219,19 +226,21 @@ namespace CampusServicePortal.Services.Implementation
             await _authRepository.UpdateUserAsync(user);
             await _authRepository.SaveChangesAsync();
 
-            await _emailService.SendVerificationEmailAsync(user.Email, user.FullName, newToken);
+            await _emailService.SendVerificationEmailAsync(
+                user.Email,
+                user.FullName,
+                newToken);
         }
-
-        // ── Forgot / Reset Password ───────────────────────────────────────────────
 
         public async Task ForgotPasswordAsync(string email)
         {
             var user = await _authRepository.GetUserByEmailAsync(email);
 
-            // BRD Rule: Response NEVER reveals if the email exists (prevents account enumeration)
-            if (user == null) return;
+            if (user == null)
+            {
+                return;
+            }
 
-            // Invalidate any existing unused tokens for this user
             await _passwordResetTokenRepository.InvalidatePreviousTokensAsync(user.UserId);
 
             var expiryMinutes = double.Parse(
@@ -250,47 +259,43 @@ namespace CampusServicePortal.Services.Implementation
             await _passwordResetTokenRepository.SaveChangesAsync();
 
             await _emailService.SendPasswordResetEmailAsync(
-                user.Email, user.FullName, resetToken.Token);
+                user.Email,
+                user.FullName,
+                resetToken.Token);
         }
 
         public async Task ResetPasswordAsync(ResetPasswordDto dto)
         {
-            // BRD Rule: Token must be valid, unused, and not expired
             var tokenRecord = await _passwordResetTokenRepository.GetValidTokenAsync(dto.Token);
 
             if (tokenRecord == null)
+            {
                 throw new InvalidOperationException(
-                    "The password reset link is invalid, has already been used, or has expired. " +
-                    "Please request a new reset link.");
+                    "The password reset link is invalid, has already been used, or has expired.");
+            }
 
             var user = tokenRecord.User
                 ?? await _authRepository.GetUserByIdAsync(tokenRecord.UserId);
 
             if (user == null)
+            {
                 throw new InvalidOperationException("User not found.");
+            }
 
-            // Update password hash
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
 
-            // Mark the token as used
             await _passwordResetTokenRepository.MarkTokenUsedAsync(tokenRecord.TokenId);
-
-            // Invalidate ALL other active reset tokens for this user (BRD: forces re-login)
             await _passwordResetTokenRepository.InvalidatePreviousTokensAsync(user.UserId);
 
-            // Revoke all refresh tokens to force re-login everywhere
-            foreach (var rt in user.RefreshTokens)
+            foreach (var refreshToken in user.RefreshTokens)
             {
-                rt.IsRevoked = true;
+                refreshToken.IsRevoked = true;
             }
 
             await _authRepository.UpdateUserAsync(user);
             await _authRepository.SaveChangesAsync();
             await _passwordResetTokenRepository.SaveChangesAsync();
         }
-
-        // ── Helpers ───────────────────────────────────────────────────────────────
-
 
         private string GenerateJwtToken(User user)
         {
@@ -300,8 +305,9 @@ namespace CampusServicePortal.Services.Implementation
             var issuer = _configuration["Jwt:Issuer"] ?? "CampusServicePortal";
             var audience = _configuration["Jwt:Audience"] ?? "CampusServicePortalUsers";
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
@@ -325,11 +331,16 @@ namespace CampusServicePortal.Services.Implementation
         private async Task<Faculty?> ResolveFacultyAsync(string? facultyName)
         {
             if (string.IsNullOrWhiteSpace(facultyName))
+            {
                 return null;
+            }
 
             var existing = await _facultyRepository.GetByNameAsync(facultyName.Trim());
+
             if (existing != null)
+            {
                 return existing;
+            }
 
             var faculty = new Faculty
             {
@@ -337,8 +348,10 @@ namespace CampusServicePortal.Services.Implementation
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
+
             await _facultyRepository.AddAsync(faculty);
             await _facultyRepository.SaveChangesAsync();
+
             return faculty;
         }
     }
