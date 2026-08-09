@@ -16,6 +16,8 @@ namespace CampusServicePortal.Data
             SeedMasterList(db);
             SeedDemoStudent(db);
             SeedSeats(db);
+            SeedComplaintCategories(db);
+            SeedFeeTypes(db);
         }
 
         private static void SeedSeats(ApplicationDbContext db)
@@ -44,6 +46,28 @@ namespace CampusServicePortal.Data
                 });
             }
 
+            db.SaveChanges();
+        }
+
+        private static void SeedComplaintCategories(ApplicationDbContext db)
+        {
+            if (db.ComplaintCategories.Any()) return;
+            db.ComplaintCategories.AddRange(
+                new ComplaintCategory { Name = "Maintenance", Description = "Facilities, repairs and maintenance issues" },
+                new ComplaintCategory { Name = "Hostel", Description = "Accommodation and hostel-related concerns" },
+                new ComplaintCategory { Name = "Academic", Description = "Academic services and course-related concerns" },
+                new ComplaintCategory { Name = "Other", Description = "Any other campus service issue" });
+            db.SaveChanges();
+        }
+
+        private static void SeedFeeTypes(ApplicationDbContext db)
+        {
+            if (db.FeeTypes.Any()) return;
+            db.FeeTypes.AddRange(
+                new FeeType { Name = "Tuition Fee", Description = "Tuition fee" },
+                new FeeType { Name = "Semester Fee", Description = "Semester registration fee" },
+                new FeeType { Name = "Exam Fee", Description = "Examination fee" },
+                new FeeType { Name = "Lab Fine", Description = "Lab damage or overdue fine" });
             db.SaveChanges();
         }
 

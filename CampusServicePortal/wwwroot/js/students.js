@@ -229,6 +229,9 @@ if (document.getElementById('students-admin-page')) {
                     create.appendChild(opt);
                 }
             });
+            create?.addEventListener('change', () => {
+                DegreePrograms.populate(document.getElementById('create-degree'), create.value);
+            });
         } catch { /* keep empty selects */ }
     }
 
@@ -418,6 +421,7 @@ if (document.getElementById('students-admin-page')) {
     window.openCreateModal = () => {
         document.getElementById('create-modal').classList.add('show');
         document.getElementById('create-form').reset();
+        DegreePrograms.populate(document.getElementById('create-degree'), '');
         UI.hideAlert('create-alert');
     };
 
@@ -437,7 +441,7 @@ if (document.getElementById('students-admin-page')) {
             email: document.getElementById('create-email').value.trim(),
             password: document.getElementById('create-password').value,
             faculty: document.getElementById('create-faculty').value,
-            degreeProgram: document.getElementById('create-degree').value.trim(),
+            degreeProgram: document.getElementById('create-degree').value,
             enrollmentYear: parseInt(document.getElementById('create-year').value),
             phoneNumber: document.getElementById('create-phone').value.trim() || null,
             contactNumber: document.getElementById('create-contact').value.trim() || null,

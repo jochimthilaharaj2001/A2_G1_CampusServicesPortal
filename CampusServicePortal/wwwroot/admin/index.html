@@ -25,6 +25,8 @@
             <a href="/admin/labs.html" class="nav-link">Labs</a>
             <a href="/admin/master-list.html" class="nav-link">Master List</a>
             <a href="/admin/master-data.html" class="nav-link">Master Data</a>
+            <a href="/admin/complaints.html" class="nav-link">Complaints</a>
+            <a href="/admin/fees.html" class="nav-link">Fees</a>
         </div>
         <div class="nav-user">
             <div class="user-avatar" id="nav-avatar">A</div>
@@ -36,7 +38,14 @@
     <div class="page-wrapper">
         <div class="container" style="max-width:900px;">
             <h1 class="page-title" style="margin-top:2rem;">Admin Dashboard</h1>
-            <p class="page-subtitle" style="color:var(--text-secondary);">Quick access to administrative tools.</p>
+            <p class="page-subtitle" style="color:var(--text-secondary);">Live campus service metrics and administrative tools.</p>
+            <section class="dashboard-stat-grid" aria-label="Administration summary">
+                <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-profile">🎓</div><div><p class="dashboard-stat-label">Registered Students</p><p class="dashboard-stat-value" id="dash-students">-</p></div></article>
+                <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">📣</div><div><p class="dashboard-stat-label">Open Complaints</p><p class="dashboard-stat-value" id="dash-open-complaints">-</p></div></article>
+                <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-status">₨</div><div><p class="dashboard-stat-label">Outstanding Fees</p><p class="dashboard-stat-text" id="dash-outstanding">-</p></div></article>
+                <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-lab">✓</div><div><p class="dashboard-stat-label">Fees Collected</p><p class="dashboard-stat-text" id="dash-collected">-</p></div></article>
+            </section>
+            <section class="card" style="padding:1.5rem;margin-bottom:1.5rem"><div class="dashboard-panel-heading"><div><h2>Complaint Status by Category</h2><p>Current triage and resolution workload.</p></div><a href="/admin/complaints.html" class="text-link">Manage complaints</a></div><div class="table-wrapper"><table><thead><tr><th>Category</th><th>Pending</th><th>In Progress</th><th>Resolved</th></tr></thead><tbody id="complaint-summary"><tr><td colspan="4">Loading...</td></tr></tbody></table></div></section>
 
             <div class="admin-grid">
                 <a href="/admin/students.html" class="admin-link">
@@ -63,12 +72,14 @@
                         <p>Manage Computer/Science labs and their seats/capacities.</p>
                     </div>
                 </a>
+                <a href="/admin/complaints.html" class="admin-link"><div class="card admin-card"><h2>Complaints</h2><p>Review student issues, update their status and maintain categories.</p></div></a>
+                <a href="/admin/fees.html" class="admin-link"><div class="card admin-card"><h2>Fees</h2><p>Create fee types, assign charges and monitor collections.</p></div></a>
             </div>
         </div>
     </div>
 
     <script src="/js/api.js"></script>
-    <script>
+    <script type="text/plain">
         // Simple auth guard – redirect to login if not admin
         if (!Auth.requireAdmin()) {
             window.location.href = '/login.html';
@@ -76,5 +87,6 @@
         UI.initNavbar();
         document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
     </script>
+    <script src="/js/admin-dashboard.js"></script>
 </body>
 </html>

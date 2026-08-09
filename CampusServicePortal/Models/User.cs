@@ -48,5 +48,11 @@ namespace CampusServicePortal.Models
 
         public ICollection<LabReservation> LabReservations { get; set; }
             = new List<LabReservation>();
+
+        public ICollection<Complaint> Complaints { get; set; }
+            = new List<Complaint>();
+
+        public ICollection<FeePayment> FeePayments { get; set; }
+            = new List<FeePayment>();
     }
 }

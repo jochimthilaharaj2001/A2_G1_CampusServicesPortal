@@ -35,6 +35,10 @@ const StudentDashboard = {
             bookingsLoading: document.getElementById('upcoming-bookings-loading'),
             bookingsList: document.getElementById('upcoming-bookings-list'),
             bookingsEmpty: document.getElementById('upcoming-bookings-empty')
+            ,openComplaints: document.getElementById('stat-open-complaints')
+            ,outstandingFees: document.getElementById('stat-outstanding-fees')
+            ,complaints: document.getElementById('dashboard-complaints')
+            ,fees: document.getElementById('dashboard-fees')
         };
     },
 
@@ -57,11 +61,20 @@ const StudentDashboard = {
                 ? bookingsResult.data
                 : [];
             this.renderBookings(bookings);
+            const dashboardResult = await api.get('/api/dashboard/student', true);
+            if (dashboardResult?.ok) this.renderServices(dashboardResult.data);
         } catch (error) {
             console.error('Failed to load student dashboard:', error);
             UI.showAlert('dashboard-alert', 'error', error.message || 'Unable to load the dashboard. Please try again.');
             this.renderBookings([]);
         }
+    },
+
+    renderServices(data) {
+        this.dom.openComplaints.textContent = data.openComplaints ?? 0;
+        this.dom.outstandingFees.textContent = new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(data.outstandingFeeAmount ?? 0);
+        this.dom.complaints.innerHTML = data.recentComplaints?.length ? data.recentComplaints.map(c => `<div class="upcoming-booking-item"><div class="booking-details"><h3>${this.escapeHtml(c.categoryName)}</h3><p>${new Date(c.createdAt).toLocaleDateString()}</p></div><span class="badge ${c.status === 'Resolved' ? 'badge-success' : c.status === 'Pending' ? 'badge-warning' : 'badge-info'}">${this.escapeHtml(c.status)}</span></div>`).join('') : '<p class="page-subtitle">No complaints submitted yet.</p>';
+        this.dom.fees.innerHTML = data.recentFees?.length ? data.recentFees.map(f => `<div class="upcoming-booking-item"><div class="booking-details"><h3>${this.escapeHtml(f.feeTypeName)}</h3><p>${this.escapeHtml(f.billingPeriod)} · LKR ${Number(f.amount).toLocaleString()}</p></div><span class="badge ${f.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${this.escapeHtml(f.status)}</span></div>`).join('') : '<p class="page-subtitle">No fee assignments available.</p>';
     },
 
     renderProfile(profile) {
