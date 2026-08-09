@@ -97,12 +97,17 @@ namespace CampusServicePortal
             builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
             builder.Services.AddScoped<ILabReservationService, LabReservationService>();
             builder.Services.AddScoped<ILabService, LabService>();
+            builder.Services.AddScoped<IComplaintService, ComplaintService>();
+            builder.Services.AddScoped<IFeePaymentService, FeePaymentService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                // Keep the LocalDB schema in sync before seed queries access newly added tables.
+                db.Database.Migrate();
                 DatabaseSeeder.Seed(db);
             }
 

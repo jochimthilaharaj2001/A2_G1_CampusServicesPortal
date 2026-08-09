@@ -169,6 +169,7 @@ const UI = {
     initNavbar() {
         const user = Auth.getUser();
         if (!user) return;
+        this.normalizeNavigation();
         const nameEl = document.getElementById('nav-name');
         const avatarEl = document.getElementById('nav-avatar');
         const adminLinks = document.querySelectorAll('.admin-only');
@@ -184,6 +185,70 @@ const UI = {
             logoutBtn.addEventListener('click', () => Auth.logout());
             logoutBtn.dataset.logoutBound = 'true';
         }
+    },
+
+    /** Keep every admin page on the same navigation menu. */
+    normalizeNavigation() {
+        if (!Auth.isAdmin()) return;
+
+        const navbar = document.querySelector('.navbar');
+        const links = navbar?.querySelector('.nav-links');
+        if (!navbar || !links) return;
+
+        navbar.classList.add('admin-navbar');
+        const currentPath = window.location.pathname.toLowerCase();
+        const items = [
+            ['/admin/index.html', 'Dashboard'],
+            ['/admin/students.html', 'Students'],
+            ['/admin/labs.html', 'Labs'],
+            ['/admin/master-list.html', 'Master List'],
+            ['/admin/master-data.html', 'Master Data'],
+            ['/admin/complaints.html', 'Complaints'],
+            ['/admin/fees.html', 'Fees']
+        ];
+
+        links.innerHTML = items.map(([href, label]) => {
+            const active = currentPath === href || (href === '/admin/students.html' && currentPath === '/admin/student-detail.html');
+            return `<a href="${href}" class="nav-link${active ? ' active' : ''}">${label}</a>`;
+        }).join('');
+    }
+};
+
+// Faculty-specific programme options used by the admin student forms.
+// The selected value remains a string, matching the existing Student.DegreeProgram field.
+window.DegreePrograms = {
+    catalog: {
+        Computing: ['BSc (Hons) Computer Science', 'BSc (Hons) Software Engineering', 'BSc (Hons) Information Technology', 'BSc (Hons) Cyber Security', 'BSc (Hons) Data Science'],
+        Engineering: ['BSc Engineering', 'BSc (Hons) Civil Engineering', 'BSc (Hons) Electrical & Electronic Engineering', 'BSc (Hons) Mechanical Engineering', 'BSc (Hons) Software Engineering'],
+        Business: ['BBA Management', 'BBA Accounting', 'BBA Finance', 'BBA Marketing', 'BBA Business Analytics'],
+        Science: ['BSc Computer Science', 'BSc Mathematics', 'BSc Physics', 'BSc Chemistry', 'BSc Biology'],
+        Arts: ['BA Economics', 'BA English', 'BA Psychology', 'BA International Relations', 'BA History'],
+        Medicine: ['MBBS', 'BSc Nursing', 'BSc Medical Laboratory Science'],
+        Law: ['LLB (Hons)'],
+        Education: ['BEd (Hons)', 'BA Education']
+    },
+
+    key(faculty) {
+        return String(faculty || '').replace(/^Faculty of\s+/i, '').trim();
+    },
+
+    populate(select, faculty, currentValue = '') {
+        if (!select) return;
+        select.replaceChildren();
+
+        if (!faculty) {
+            const option = new Option('Select a faculty first...', '');
+            select.add(option);
+            select.disabled = true;
+            return;
+        }
+
+        select.disabled = false;
+        select.add(new Option('Select degree program...', ''));
+        const options = this.catalog[this.key(faculty)] || ['General / Other Programme'];
+        if (currentValue && !options.includes(currentValue)) options.unshift(currentValue);
+        options.forEach(program => select.add(new Option(program, program)));
+        select.value = currentValue || '';
     }
 };
 

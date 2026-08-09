@@ -20,6 +20,10 @@ namespace CampusServicePortal.Data
         public DbSet<Lab> Labs { get; set; }
         public DbSet<LabSeat> LabSeats { get; set; }
         public DbSet<LabReservation> LabReservations { get; set; }
+        public DbSet<ComplaintCategory> ComplaintCategories { get; set; }
+        public DbSet<Complaint> Complaints { get; set; }
+        public DbSet<FeeType> FeeTypes { get; set; }
+        public DbSet<FeePayment> FeePayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -89,6 +93,38 @@ namespace CampusServicePortal.Data
                 .HasOne(r => r.User)
                 .WithMany(u => u.LabReservations)
                 .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ComplaintCategory>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Complaints)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Category)
+                .WithMany(c => c.Complaints)
+                .HasForeignKey(c => c.ComplaintCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FeeType>()
+                .HasIndex(f => f.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<FeePayment>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.FeePayments)
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FeePayment>()
+                .HasOne(f => f.FeeType)
+                .WithMany(t => t.FeePayments)
+                .HasForeignKey(f => f.FeeTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ── LabReservation → Lab ──────────────────────────────────────────
