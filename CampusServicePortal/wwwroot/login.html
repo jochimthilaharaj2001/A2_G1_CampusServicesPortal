@@ -65,6 +65,12 @@
       background: currentColor;
       opacity: 0.7;
     }
+    .student-access-btn {
+      width: 100%;
+      justify-content: center;
+      border-color: rgba(129, 140, 248, 0.5);
+      color: var(--primary-light, #a5b4fc);
+    }
   </style>
 </head>
 
@@ -150,6 +156,12 @@
           <a href="/register.html" class="text-link">Create an account</a>
         </p>
 
+        <div class="text-center" id="student-btn-row" style="display:none; margin-top:0.25rem;">
+          <button type="button" class="admin-access-btn student-access-btn" onclick="switchPortal('Student')" id="student-access-btn">
+            ← Switch to Student Access
+          </button>
+        </div>
+
         <p class="text-center mt-2" style="color:var(--text-muted);font-size:0.78rem;">
           Need to verify your email?
           <a href="/verify-email.html" class="text-link">Verify here</a>
@@ -184,6 +196,7 @@
         document.getElementById('email').value = '';
         document.getElementById('password').value = '';
         document.getElementById('register-row').style.display = 'block';
+        document.getElementById('student-btn-row').style.display = 'none';
         document.getElementById('admin-banner').classList.remove('visible');
         document.getElementById('admin-btn-row').style.display = 'block';
         document.getElementById('login-btn').querySelector('.btn-label').textContent = 'Sign In';
@@ -198,6 +211,7 @@
         document.getElementById('email').value = '';
         document.getElementById('password').value = '';
         document.getElementById('register-row').style.display = 'none';
+        document.getElementById('student-btn-row').style.display = 'block';
         document.getElementById('admin-banner').classList.add('visible');
         document.getElementById('admin-btn-row').style.display = 'none';
         document.getElementById('login-btn').querySelector('.btn-label').textContent = 'Admin Sign In';

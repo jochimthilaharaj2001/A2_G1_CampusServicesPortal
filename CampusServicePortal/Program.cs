@@ -101,6 +101,9 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IStudentService, StudentService>();
             builder.Services.AddScoped<IFacultyService, FacultyService>();
             builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
+            builder.Services.AddScoped<ILabReservationRepository,LabReservationRepository>();
+            builder.Services.AddScoped<ILabReservationService,LabReservationService>();
+            builder.Services.AddScoped<ILabService, LabService>();
 
             var app = builder.Build();
 

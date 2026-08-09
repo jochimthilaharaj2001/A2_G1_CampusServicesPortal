@@ -60,7 +60,7 @@ if (document.getElementById('login-form')) {
                 });
                 window.location.href = res.data.role === 'Admin'
                     ? '/admin/index.html'
-                    : '/profile.html';
+                    : '/dashboard.html';
             } else {
                 const msg = res.data?.message || 'Invalid email or password.';
                 UI.showAlert(alert, 'error', msg);
