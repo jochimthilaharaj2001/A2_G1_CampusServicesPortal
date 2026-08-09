@@ -1,34 +1,47 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
-	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>1326efb2-b3b4-4c88-b69d-da0d24f5c6a7</UserSecretsId>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+  <ItemGroup>
 
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19" />
+    <!-- Authentication -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
 
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.19" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.19">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.19" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.19">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+    <!-- ASP.NET Core / Swagger -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
-	</ItemGroup>
+    <!-- Entity Framework Core -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.19" />
 
-	<ItemGroup>
-		<Folder Include="Middleware\" />
-	</ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.19">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.19" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.19">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- Email -->
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MimeKit" Version="4.17.0" />
+    <PackageReference Include="SendGrid" Version="9.29.3" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Middleware\" />
+  </ItemGroup>
 
 </Project>

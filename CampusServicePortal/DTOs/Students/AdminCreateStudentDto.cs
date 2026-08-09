@@ -1,0 +1,46 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace CampusServicePortal.DTOs.Students
+{
+    public class AdminCreateStudentDto
+    {
+        [Required(ErrorMessage = "Index Number is required")]
+        [MaxLength(50)]
+        public string IndexNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Full Name is required")]
+        [StringLength(100)]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid Email format")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Faculty is required")]
+        [MaxLength(100)]
+        public string Faculty { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Degree Program is required")]
+        [MaxLength(150)]
+        public string DegreeProgram { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Enrollment Year is required")]
+        [Range(2000, 2100)]
+        public int EnrollmentYear { get; set; }
+
+        public string? Password { get; set; }
+
+        // Validated in service when provided; min 8 chars to match registration rules.
+
+        [Phone]
+        [MaxLength(20)]
+        public string? PhoneNumber { get; set; }
+
+        [MaxLength(20)]
+        public string? ContactNumber { get; set; }
+
+        [MaxLength(300)]
+        public string? Address { get; set; }
+    }
+}

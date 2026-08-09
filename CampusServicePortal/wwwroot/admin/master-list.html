@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Student Master List — Campus Services Portal Admin</title>
+<meta name="description" content="Admin management of the student master list — search and bulk CSV import."/>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+  code { font-family: 'Courier New', monospace; }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: rgba(15,23,42,0.5);
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--primary);
+    background: rgba(99,102,241,0.05);
+  }
+  .drop-zone-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+  .drop-zone-text { color: var(--text-secondary); font-size: 0.875rem; }
+  .drop-zone-text strong { color: var(--primary-light); }
+
+  .csv-format {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 1rem;
+  }
+  .csv-format code {
+    display: block; font-size: 0.78rem; color: var(--accent);
+    margin-top: 0.5rem; line-height: 1.8;
+  }
+</style>
+</head>
+<body id="master-list-page">
+<div class="page-bg"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/admin/students.html" class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    Campus Portal
+    <span class="badge badge-warning" style="margin-left:0.5rem;">Admin</span>
+  </a>
+  <div class="nav-links">
+    <a href="/admin/index.html" class="nav-link">Dashboard</a>
+    <a href="/admin/students.html" class="nav-link">Students</a>
+    <a href="/admin/master-list.html" class="nav-link active">Master List</a>
+    <a href="/admin/master-data.html" class="nav-link">Master Data</a>
+  </div>
+  <div class="nav-user">
+    <div class="user-avatar" id="nav-avatar">A</div>
+    <span style="font-size:0.875rem;color:var(--text-secondary);" id="nav-name">Admin</span>
+    <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Student Master List</h1>
+        <p class="page-subtitle" id="result-count" style="color:var(--text-secondary);">Loading…</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start;">
+
+      <!-- Left: Table -->
+      <div>
+        <!-- Filter Bar -->
+        <div class="filter-bar" style="margin-bottom:1rem;">
+          <div class="search-input-wrapper" style="flex:1;">
+            <span class="search-icon">🔍</span>
+            <input id="search-input" type="search" placeholder="Search by index number, name or faculty…"/>
+          </div>
+          <button class="btn btn-ghost btn-sm"
+            onclick="document.getElementById('search-input').value='';loadMasterList()">
+            ✕ Clear
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Index Number</th>
+                <th>Full Name</th>
+                <th>Faculty</th>
+                <th>Programme</th>
+                <th>Year</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="master-tbody">
+              <tr>
+                <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                  <div class="spinner" style="width:28px;height:28px;margin:0 auto 0.5rem;"></div>Loading…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Import Panel -->
+      <div>
+        <div class="card">
+          <h2 style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">📥 Import Master List</h2>
+          <p style="color:var(--text-secondary);font-size:0.8rem;margin-bottom:1.25rem;">
+            Upload a CSV file from the Registrar's Office to add or update student records ahead of each intake.
+            Duplicate index numbers are skipped automatically.
+          </p>
+
+          <div id="import-alert" class="alert global-alert" role="alert"></div>
+
+          <div id="drop-zone" class="drop-zone">
+            <span class="drop-zone-icon">📂</span>
+            <div class="drop-zone-text">
+              <strong>Click to select</strong> or drag & drop a CSV file here
+            </div>
+          </div>
+
+          <input id="csv-file" type="file" accept=".csv" style="display:none;"/>
+
+          <div id="selected-filename" style="color:var(--accent);font-size:0.875rem;margin-top:0.75rem;min-height:1.25rem;"></div>
+
+          <button id="import-confirm-btn" class="btn btn-primary btn-full" style="display:none;margin-top:0.75rem;">
+            <div class="btn-spinner"></div>
+            <span class="btn-label">⬆ Upload & Import</span>
+          </button>
+
+          <div class="csv-format">
+            <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);">
+              Expected CSV Format
+            </p>
+            <code>IndexNumber,FullName,Faculty,DegreeProgram,EnrollmentYear</code>
+            <code style="color:var(--text-muted);">EG/2024/001,John Smith,Faculty of Engineering,BSc Engineering,2024</code>
+            <code style="color:var(--text-muted);">SC/2024/045,Jane Doe,Faculty of Science,BSc Computing,2024</code>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card" style="margin-top:1rem;">
+          <p style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.75rem;">
+            Status Legend
+          </p>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;">
+              <span class="badge badge-success">✓ Registered</span>
+              <span style="color:var(--text-secondary);">Account has been created</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;">
+              <span class="badge badge-gray">○ Not Registered</span>
+              <span style="color:var(--text-secondary);">Eligible to register</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin-master-list.js"></script>
+</body>
+</html>
