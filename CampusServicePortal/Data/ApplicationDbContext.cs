@@ -33,8 +33,17 @@ namespace CampusServicePortal.Data
         public DbSet<Lab> Labs { get; set; }
         public DbSet<LabSeat> LabSeats { get; set; }
         public DbSet<LabReservation> LabReservations { get; set; }
+        public DbSet<ComplaintCategory> ComplaintCategories { get; set; }
+        public DbSet<Complaint> Complaints { get; set; }
+        public DbSet<FeeType> FeeTypes { get; set; }
+        public DbSet<FeePayment> FeePayments { get; set; }
+        public DbSet<Venue> Venues { get; set; }
+        public DbSet<CampusEvent> Events { get; set; }
+        public DbSet<EventSeat> EventSeats { get; set; }
+        public DbSet<EventRegistration> EventRegistrations { get; set; }
+        public DbSet<CertificateRequest> CertificateRequests { get; set; }
 
-        // Hostel Module — YOUR WORK
+        // Hostel Module
         public DbSet<Hostel> Hostels { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<HostelApplication> HostelApplications { get; set; }
@@ -168,6 +177,108 @@ namespace CampusServicePortal.Data
                 .HasOne(r => r.Lab)
                 .WithMany()
                 .HasForeignKey(r => r.LabId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            // ========================================================
+            // COMPLAINT MODULE
+            // ========================================================
+
+            modelBuilder.Entity<ComplaintCategory>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Complaints)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Category)
+                .WithMany(c => c.Complaints)
+                .HasForeignKey(c => c.ComplaintCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            // ========================================================
+            // FEE MODULE
+            // ========================================================
+
+            modelBuilder.Entity<FeeType>()
+                .HasIndex(f => f.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<FeePayment>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.FeePayments)
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FeePayment>()
+                .HasOne(f => f.FeeType)
+                .WithMany(t => t.FeePayments)
+                .HasForeignKey(f => f.FeeTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            // ========================================================
+            // EVENT MODULE
+            // ========================================================
+
+            modelBuilder.Entity<Venue>()
+                .HasIndex(v => v.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<CampusEvent>()
+                .HasOne(e => e.Venue)
+                .WithMany(v => v.Events)
+                .HasForeignKey(e => e.VenueId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EventSeat>()
+                .HasOne(s => s.Event)
+                .WithMany(e => e.EventSeats)
+                .HasForeignKey(s => s.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EventSeat>()
+                .HasIndex(s => new { s.EventId, s.SeatNumber })
+                .IsUnique();
+
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.Event)
+                .WithMany(e => e.EventRegistrations)
+                .HasForeignKey(r => r.EventId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.EventRegistrations)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EventRegistration>()
+                .HasOne(r => r.Seat)
+                .WithMany(s => s.Registrations)
+                .HasForeignKey(r => r.EventSeatId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            // ========================================================
+            // CERTIFICATE REQUEST
+            // ========================================================
+
+            modelBuilder.Entity<CertificateRequest>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.CertificateRequests)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CertificateRequest>()
+                .HasOne(r => r.CertificateType)
+                .WithMany(t => t.CertificateRequests)
+                .HasForeignKey(r => r.CertificateTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 

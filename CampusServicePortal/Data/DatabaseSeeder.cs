@@ -16,6 +16,9 @@ namespace CampusServicePortal.Data
             SeedMasterList(db);
             SeedDemoStudent(db);
             SeedSeats(db);
+            SeedComplaintCategories(db);
+            SeedFeeTypes(db);
+            SeedEventsAndVenues(db);
         }
 
         private static void SeedSeats(ApplicationDbContext db)
@@ -44,6 +47,48 @@ namespace CampusServicePortal.Data
                 });
             }
 
+            db.SaveChanges();
+        }
+
+        private static void SeedComplaintCategories(ApplicationDbContext db)
+        {
+            if (db.ComplaintCategories.Any()) return;
+            db.ComplaintCategories.AddRange(
+                new ComplaintCategory { Name = "Maintenance", Description = "Facilities, repairs and maintenance issues" },
+                new ComplaintCategory { Name = "Hostel", Description = "Accommodation and hostel-related concerns" },
+                new ComplaintCategory { Name = "Academic", Description = "Academic services and course-related concerns" },
+                new ComplaintCategory { Name = "Other", Description = "Any other campus service issue" });
+            db.SaveChanges();
+        }
+
+        private static void SeedFeeTypes(ApplicationDbContext db)
+        {
+            if (db.FeeTypes.Any()) return;
+            db.FeeTypes.AddRange(
+                new FeeType { Name = "Tuition Fee", Description = "Tuition fee" },
+                new FeeType { Name = "Semester Fee", Description = "Semester registration fee" },
+                new FeeType { Name = "Exam Fee", Description = "Examination fee" },
+                new FeeType { Name = "Lab Fine", Description = "Lab damage or overdue fine" });
+            db.SaveChanges();
+        }
+
+        private static void SeedEventsAndVenues(ApplicationDbContext db)
+        {
+            if (!db.Venues.Any())
+            {
+                db.Venues.AddRange(
+                    new Venue { Name = "Main Auditorium", VenueType = "Event Hall", Capacity = 300, Location = "Block A" },
+                    new Venue { Name = "University Grounds", VenueType = "Open Space", Capacity = 1000, Location = "Central Campus" });
+                db.SaveChanges();
+            }
+
+            if (db.Events.Any()) return;
+            var auditorium = db.Venues.First(v => v.Name == "Main Auditorium");
+            var grounds = db.Venues.First(v => v.Name == "University Grounds");
+            var now = DateTime.UtcNow;
+            db.Events.AddRange(
+                new CampusEvent { Title = "Career Readiness Workshop", Description = "A practical workshop for students preparing for internships.", VenueId = auditorium.VenueId, StartsAt = now.AddDays(10).Date.AddHours(9), EndsAt = now.AddDays(10).Date.AddHours(12), Capacity = 120 },
+                new CampusEvent { Title = "Campus Sports Day", Description = "Annual inter-faculty sports event.", VenueId = grounds.VenueId, StartsAt = now.AddDays(20).Date.AddHours(8), EndsAt = now.AddDays(20).Date.AddHours(17), Capacity = 500 });
             db.SaveChanges();
         }
 

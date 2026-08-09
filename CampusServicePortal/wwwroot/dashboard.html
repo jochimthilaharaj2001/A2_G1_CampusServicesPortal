@@ -18,6 +18,8 @@
     <div class="nav-links">
       <a href="/dashboard.html" class="nav-link active">Dashboard</a>
       <a href="/labs.html" class="nav-link">Lab Reservations</a>
+      <a href="/complaints.html" class="nav-link">Complaints</a>
+      <a href="/fees.html" class="nav-link">Fees</a>
     </div>
     <div class="nav-user">
       <a href="/profile.html" class="user-avatar profile-nav-avatar" id="nav-avatar" aria-label="My Profile" title="My Profile">U</a>
@@ -47,6 +49,8 @@
             <p class="dashboard-stat-value" id="stat-upcoming-labs">-</p>
           </div>
         </article>
+        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">📣</div><div><p class="dashboard-stat-label">Open Complaints</p><p class="dashboard-stat-value" id="stat-open-complaints">-</p></div></article>
+        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-status">₨</div><div><p class="dashboard-stat-label">Outstanding Fees</p><p class="dashboard-stat-text" id="stat-outstanding-fees">-</p></div></article>
         <article class="dashboard-stat-card">
           <div class="dashboard-stat-icon icon-bookings">📅</div>
           <div>
@@ -115,19 +119,24 @@
         </aside>
       </section>
 
+      <section class="dashboard-content-grid" style="margin-top:1.25rem">
+        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Recent Complaints</h2><p>Track updates to your submitted issues.</p></div><a href="/complaints.html" class="text-link">Open complaints</a></div><div id="dashboard-complaints" class="upcoming-bookings-list"></div></article>
+        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Fee Summary</h2><p>Outstanding fees and payment history.</p></div><a href="/fees.html" class="text-link">Open fees</a></div><div id="dashboard-fees" class="upcoming-bookings-list"></div></article>
+      </section>
+
       <section class="dashboard-services-section">
         <div class="dashboard-section-heading">
           <div>
             <h2>Campus Services</h2>
-            <p>More student services will appear here as they become available.</p>
+            <p>Access campus services and track each request in one place.</p>
           </div>
         </div>
         <div class="dashboard-service-grid">
-          <article class="dashboard-service-card">
+          <article class="dashboard-service-card active-service">
             <span class="dashboard-service-icon">🏠</span>
             <h3>Hostel Applications</h3>
             <p>Apply for and track accommodation requests.</p>
-            <span class="badge badge-muted">Coming soon</span>
+            <a href="/complaints.html" class="text-link">Manage complaints</a>
           </article>
           <article class="dashboard-service-card active-service">
             <span class="dashboard-service-icon">🔬</span>
@@ -135,17 +144,17 @@
             <p>Reserve a computer seat or science lab time slot.</p>
             <a href="/labs.html" class="text-link">Open reservations</a>
           </article>
-          <article class="dashboard-service-card">
+          <article class="dashboard-service-card active-service">
             <span class="dashboard-service-icon">📣</span>
             <h3>Event Registrations</h3>
             <p>Discover events and manage your registrations.</p>
-            <span class="badge badge-muted">Coming soon</span>
+            <a href="/events.html" class="text-link">Open events</a>
           </article>
           <article class="dashboard-service-card">
             <span class="dashboard-service-icon">📄</span>
-            <h3>Certificates & Fees</h3>
-            <p>Request certificates and view payment information.</p>
-            <span class="badge badge-muted">Coming soon</span>
+            <h3>Fee Payments</h3>
+            <p>View charges, pay outstanding fees and print receipts.</p>
+            <a href="/fees.html" class="text-link">Open fees</a>
           </article>
         </div>
       </section>

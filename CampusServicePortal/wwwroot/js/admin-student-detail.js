@@ -77,7 +77,7 @@ if (document.getElementById('admin-student-detail-page')) {
         document.getElementById('edit-fullname').value = student.fullName || '';
         document.getElementById('edit-email').value = student.email || '';
         populateFacultySelect(student.faculty);
-        document.getElementById('edit-degree').value = student.degreeProgram || '';
+        DegreePrograms.populate(document.getElementById('edit-degree'), student.faculty, student.degreeProgram || '');
         document.getElementById('edit-year').value = student.enrollmentYear || '';
         document.getElementById('edit-phone').value = student.phoneNumber || '';
         document.getElementById('edit-contact').value = student.contactNumber || '';
@@ -102,6 +102,10 @@ if (document.getElementById('admin-student-detail-page')) {
 
         select.value = currentValue || '';
     }
+
+    document.getElementById('edit-faculty')?.addEventListener('change', event => {
+        DegreePrograms.populate(document.getElementById('edit-degree'), event.target.value);
+    });
 
     function setField(id, value) {
         const el = document.getElementById(id);
@@ -139,7 +143,7 @@ if (document.getElementById('admin-student-detail-page')) {
             fullName: document.getElementById('edit-fullname').value.trim(),
             email: document.getElementById('edit-email').value.trim(),
             faculty: document.getElementById('edit-faculty').value,
-            degreeProgram: document.getElementById('edit-degree').value.trim(),
+            degreeProgram: document.getElementById('edit-degree').value,
             enrollmentYear: parseInt(document.getElementById('edit-year').value),
             phoneNumber: document.getElementById('edit-phone').value.trim() || null,
             contactNumber: document.getElementById('edit-contact').value.trim() || null,

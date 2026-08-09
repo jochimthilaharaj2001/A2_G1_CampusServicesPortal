@@ -136,6 +136,11 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ILabReservationService, LabReservationService>();
             builder.Services.AddScoped<ILabService, LabService>();
+            builder.Services.AddScoped<IComplaintService, ComplaintService>();
+            builder.Services.AddScoped<IFeePaymentService, FeePaymentService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IEventService, EventService>();
+            builder.Services.AddScoped<ICertificateRequestService, CertificateRequestService>();
 
             var app = builder.Build();
 
@@ -145,9 +150,14 @@ namespace CampusServicePortal
 
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider
-                    .GetRequiredService<ApplicationDbContext>();
+ var db = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
 
+                // Keep the LocalDB schema in sync before seed queries
+                // access newly added columns/tables.
+                db.Database.Migrate();
+
+                DatabaseSeeder.Seed(db);
                 DatabaseSeeder.Seed(db);
             }
 
