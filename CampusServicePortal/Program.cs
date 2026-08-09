@@ -100,6 +100,8 @@ namespace CampusServicePortal
             builder.Services.AddScoped<IComplaintService, ComplaintService>();
             builder.Services.AddScoped<IFeePaymentService, FeePaymentService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IEventService, EventService>();
+            builder.Services.AddScoped<ICertificateRequestService, CertificateRequestService>();
 
             var app = builder.Build();
 
