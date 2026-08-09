@@ -249,7 +249,8 @@ namespace CampusServicePortal.Services.Implementation
             {
                 LabReservationId = x.LabReservationId,
                 UserId = x.UserId,
-                UserName = x.User?.Username,
+                // Username is optional; the admin booking list must show the student's actual name.
+                UserName = x.User?.FullName ?? x.User?.Username,
                 LabId = x.LabId,
                 LabName = x.Lab?.Name,
                 SeatId = x.SeatId,

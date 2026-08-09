@@ -172,10 +172,18 @@ const UI = {
         const nameEl = document.getElementById('nav-name');
         const avatarEl = document.getElementById('nav-avatar');
         const adminLinks = document.querySelectorAll('.admin-only');
+        const logoutBtn = document.getElementById('logout-btn');
         if (nameEl) nameEl.textContent = user.fullName?.split(' ')[0] || 'User';
         if (avatarEl) avatarEl.textContent = (user.fullName?.[0] || 'U').toUpperCase();
         if (Auth.isAdmin()) adminLinks.forEach(el => el.style.display = '');
         else adminLinks.forEach(el => el.style.display = 'none');
+
+        // Every page uses the shared navbar, so the logout action belongs here.
+        // This prevents pages that only call UI.initNavbar() from rendering a non-functional button.
+        if (logoutBtn && !logoutBtn.dataset.logoutBound) {
+            logoutBtn.addEventListener('click', () => Auth.logout());
+            logoutBtn.dataset.logoutBound = 'true';
+        }
     }
 };
 
