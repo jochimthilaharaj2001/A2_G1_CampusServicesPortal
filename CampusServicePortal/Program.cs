@@ -4,13 +4,10 @@ using CampusServicePortal.Repositories.Implementation;
 using CampusServicePortal.Repositories.Interfaces;
 using CampusServicePortal.Services.Implementation;
 using CampusServicePortal.Services.Interfaces;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-// using Microsoft.OpenApi;
-//using Microsoft.OpenApi.Models;
-
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 namespace CampusServicePortal
@@ -21,47 +18,48 @@ namespace CampusServicePortal
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add Controllers
             builder.Services.AddControllers();
 
-            // Database Context
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Swagger
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Campus Services Portal API",
+                    Version = "v1",
+                    Description = "REST API for University Campus Services Portal (BRD Revision 2)"
+                });
 
-            //builder.Services.AddSwaggerGen(options =>
-            //{
-            //    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            //    {
-            //        Name = "Authorization",
-            //        Description = "Enter JWT Token like: Bearer {your_token}",
-            //        In = ParameterLocation.Header,
-            //        Type = SecuritySchemeType.Http,
-            //        Scheme = "bearer",
-            //        BearerFormat = "JWT"
-            //    });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Enter JWT Token like: Bearer {your_token}",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
 
-            //    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-            //    {
-            //        {
-            //            new OpenApiSecurityScheme
-            //            {
-            //                Reference = new OpenApiReference
-            //                {
-            //                    Type = ReferenceType.SecurityScheme,
-            //                    Id = "Bearer"
-            //                }
-            //            },
-            //            Array.Empty<string>()
-            //        }
-            //    });
-            //});
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
 
-            // JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -71,46 +69,56 @@ namespace CampusServicePortal
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
-
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
                 });
 
-            // Authorization
             builder.Services.AddAuthorization();
 
-            // Helpers
             builder.Services.AddScoped<JwtHelper>();
-
-            // Repository DI
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+            builder.Services.AddScoped<IStudentMasterListRepository, StudentMasterListRepository>();
+            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+            builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
+            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
 
-            // Service DI
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IStudentMasterListService, StudentMasterListService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
+            builder.Services.AddScoped<IFacultyService, FacultyService>();
+            builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
+            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
+            builder.Services.AddScoped<ILabReservationService, LabReservationService>();
+            builder.Services.AddScoped<ILabService, LabService>();
 
             var app = builder.Build();
 
-            // Configure HTTP Pipeline
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                DatabaseSeeder.Seed(db);
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
-            // Authentication must come before Authorization
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
             app.Run();
         }
     }

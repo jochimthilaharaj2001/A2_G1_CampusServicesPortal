@@ -1,4 +1,4 @@
-﻿using CampusServicePortal.DTOs.Users;
+using CampusServicePortal.DTOs.Users;
 using CampusServicePortal.Repositories.Interfaces;
 using CampusServicePortal.Services.Interfaces;
 
@@ -13,7 +13,6 @@ namespace CampusServicePortal.Services.Implementation
             _userRepository = userRepository;
         }
 
-
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
             var users = await _userRepository.GetAllUsersAsync();
@@ -21,15 +20,11 @@ namespace CampusServicePortal.Services.Implementation
             return users.Select(user => new UserDto
             {
                 UserId = user.UserId,
-
                 FullName = user.FullName,
-
                 Email = user.Email,
-
                 RoleName = user.Role?.RoleName ?? "No Role"
             });
         }
-
 
         public async Task<UserDto?> GetUserByIdAsync(int id)
         {
@@ -43,11 +38,8 @@ namespace CampusServicePortal.Services.Implementation
             return new UserDto
             {
                 UserId = user.UserId,
-
                 FullName = user.FullName,
-
                 Email = user.Email,
-
                 RoleName = user.Role?.RoleName ?? "No Role"
             };
         }

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Profile — Campus Services Portal</title>
+<meta name="description" content="View and update your student profile on the Campus Services Portal."/>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+  #edit-mode { display:none; }
+  .readonly-note {
+    font-size:0.72rem; color:var(--text-muted);
+    background:rgba(100,116,139,0.1); border-radius:4px;
+    padding:0.2rem 0.5rem; margin-top:0.3rem; display:inline-block;
+  }
+</style>
+</head>
+<body id="profile-page">
+<div class="page-bg"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/dashboard.html" class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    Campus Portal
+  </a>
+  <div class="nav-links">
+    <a href="/dashboard.html" class="nav-link">Dashboard</a>
+    <a href="/labs.html" class="nav-link">Lab Reservations</a>
+    <!-- Future modules will add links here -->
+  </div>
+  <div class="nav-user">
+    <a href="/profile.html" class="user-avatar profile-nav-avatar" id="nav-avatar" aria-label="My Profile" title="My Profile" aria-current="page">U</a>
+    <span style="font-size:0.875rem;color:var(--text-secondary);" id="nav-name">Student</span>
+    <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Loading Overlay -->
+<div id="profile-loading" style="display:flex;justify-content:center;padding:4rem;">
+  <div style="text-align:center;">
+    <div class="spinner"></div>
+    <p style="color:var(--text-secondary);margin-top:1rem;font-size:0.875rem;">Loading your profile…</p>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="profile-content" style="display:none;" class="page-wrapper">
+  <div class="container" style="max-width:800px;">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">My Profile</h1>
+        <p class="page-subtitle">View and manage your personal information</p>
+      </div>
+      <button id="edit-btn" class="btn btn-primary">
+        ✏ Edit Profile
+      </button>
+    </div>
+
+    <!-- Profile Header Card -->
+    <div class="profile-header-card">
+      <div class="profile-avatar" id="avatar-initial">?</div>
+      <div class="profile-meta">
+        <h2 id="profile-name">—</h2>
+        <div class="index" id="profile-index">Index: —</div>
+        <div class="badges">
+          <span class="badge" id="status-badge">—</span>
+          <span class="badge" id="verified-badge">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW MODE ── -->
+    <div id="view-mode">
+      <div class="profile-grid">
+        <div class="profile-field">
+          <div class="field-label">Email Address</div>
+          <div class="field-value" id="field-email">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Phone Number</div>
+          <div class="field-value" id="field-phone">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Faculty</div>
+          <div class="field-value" id="field-faculty">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Degree Programme</div>
+          <div class="field-value" id="field-degree">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Enrollment Year</div>
+          <div class="field-value" id="field-year">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Contact Number</div>
+          <div class="field-value" id="field-contact">—</div>
+        </div>
+        <div class="profile-field" style="grid-column:1/-1;">
+          <div class="field-label">Address</div>
+          <div class="field-value" id="field-address">—</div>
+        </div>
+        <div class="profile-field">
+          <div class="field-label">Member Since</div>
+          <div class="field-value" id="field-joined">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Summary (BRD: profile includes cross-module activity) -->
+    <div id="activity-summary"></div>
+
+    <!-- ── EDIT MODE ── -->
+    <div id="edit-mode">
+      <div class="card">
+        <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:1.5rem;">Edit Your Profile</h2>
+
+        <div id="profile-alert" class="alert global-alert" role="alert"></div>
+
+        <form id="edit-form" novalidate>
+          <div class="form-group">
+            <label for="edit-fullname">Full Name</label>
+            <input id="edit-fullname" type="text" placeholder="Your full name" required/>
+            <div class="field-error"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label for="edit-phone">Phone Number</label>
+              <input id="edit-phone" type="tel" placeholder="+94 77 123 4567"/>
+              <div class="field-error"></div>
+            </div>
+            <div class="form-group">
+              <label for="edit-contact">Contact Number</label>
+              <input id="edit-contact" type="tel" placeholder="Alternative contact"/>
+              <div class="field-error"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-degree">Degree Programme</label>
+            <input id="edit-degree" type="text" placeholder="Your degree programme"/>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-address">Address</label>
+            <input id="edit-address" type="text" placeholder="Your residential address"/>
+          </div>
+
+          <div class="alert alert-info" style="margin-bottom:1rem;">
+            <span class="alert-icon">🔒</span>
+            <span style="font-size:0.82rem;">
+              Your <strong>Index Number</strong>, <strong>Faculty</strong>, and <strong>Email</strong>
+              cannot be changed — contact the Registrar's Office for corrections.
+            </span>
+          </div>
+
+          <div style="display:flex;gap:0.75rem;">
+            <button type="button" id="cancel-btn" class="btn btn-ghost">Cancel</button>
+            <button type="submit" id="save-btn" class="btn btn-primary" style="flex:1;">
+              <div class="btn-spinner"></div>
+              <span class="btn-label">Save Changes</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/students.js"></script>
+</body>
+</html>
