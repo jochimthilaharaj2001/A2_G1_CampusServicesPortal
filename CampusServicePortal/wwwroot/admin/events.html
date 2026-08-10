@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Events & Venues - Campus Portal</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <div class="page-bg"></div>
+
+    <nav class="navbar">
+
+        <a href="/admin/index.html" class="nav-brand">
+            <div class="nav-logo">🎓</div>
+            Campus Portal
+            <span class="badge badge-warning">Admin</span>
+        </a>
+
+        <div class="nav-links"></div>
+
+        <div class="nav-user">
+
+            <div class="user-avatar"
+                 id="nav-avatar">
+                A
+            </div>
+
+            <span id="nav-name">Admin</span>
+
+            <button id="logout-btn"
+                    class="btn btn-ghost btn-sm">
+                Sign Out
+            </button>
+
+        </div>
+
+    </nav>
+
+    <main class="page-wrapper">
+
+        <div class="container"
+             style="max-width: 1250px;">
+
+            <div class="page-header">
+
+                <div>
+                    <h1 class="page-title">
+                        Event & Venue Management
+                    </h1>
+
+                    <p class="page-subtitle">
+                        Create events, manage venues, capacity and reserved seating.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: .75rem;">
+
+                    <button id="new-venue"
+                            class="btn btn-outline">
+                        New Venue
+                    </button>
+
+                    <button id="new-event"
+                            class="btn btn-primary">
+                        New Event
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="admin-event-alert"
+                 class="alert global-alert"></div>
+
+            <section class="card dashboard-panel">
+
+                <div class="dashboard-panel-heading">
+
+                    <div>
+                        <h2>Events</h2>
+
+                        <p>
+                            Event capacity and venue schedules are validated automatically.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Venue</th>
+                                <th>Schedule</th>
+                                <th>Capacity</th>
+                                <th>Seating</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="event-rows"></tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="card dashboard-panel"
+                     style="margin-top: 1.5rem;">
+
+                <div class="dashboard-panel-heading">
+
+                    <div>
+                        <h2>Venues</h2>
+
+                        <p>
+                            Only active venues can be used for new events.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Capacity</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="venue-rows"></tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <div class="modal-overlay"
+         id="event-modal">
+
+        <div class="modal">
+
+            <h2 class="modal-title"
+                id="event-modal-title">
+                New Event
+            </h2>
+
+            <form id="event-form">
+
+                <input id="event-id"
+                       type="hidden">
+
+                <div class="form-group">
+
+                    <label>Title</label>
+
+                    <input id="event-title"
+                           required
+                           maxlength="200">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Description</label>
+
+                    <textarea id="event-description"
+                              maxlength="2000"></textarea>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Venue</label>
+
+                    <select id="event-venue"
+                            required></select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Starts at</label>
+
+                    <input id="event-start"
+                           type="datetime-local"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Ends at</label>
+
+                    <input id="event-end"
+                           type="datetime-local"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Capacity</label>
+
+                    <input id="event-capacity"
+                           type="number"
+                           min="1"
+                           required>
+
+                </div>
+
+                <label>
+                    <input id="event-reserved"
+                           type="checkbox">
+                    Use reserved seating
+                </label>
+
+                <div class="modal-actions">
+
+                    <button type="button"
+                            class="btn btn-ghost"
+                            onclick="AdminEvents.close('event-modal')">
+                        Cancel
+                    </button>
+
+                    <button class="btn btn-primary">
+                        Save Event
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="modal-overlay"
+         id="venue-modal">
+
+        <div class="modal">
+
+            <h2 class="modal-title"
+                id="venue-modal-title">
+                New Venue
+            </h2>
+
+            <form id="venue-form">
+
+                <input id="venue-id"
+                       type="hidden">
+
+                <div class="form-group">
+
+                    <label>Name</label>
+
+                    <input id="venue-name"
+                           required
+                           maxlength="150">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Venue type</label>
+
+                    <select id="venue-type">
+                        <option>Event Hall</option>
+                        <option>Open Space</option>
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Location</label>
+
+                    <input id="venue-location"
+                           maxlength="150">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Capacity</label>
+
+                    <input id="venue-capacity"
+                           type="number"
+                           min="1"
+                           required>
+
+                </div>
+
+                <div class="modal-actions">
+
+                    <button type="button"
+                            class="btn btn-ghost"
+                            onclick="AdminEvents.close('venue-modal')">
+                        Cancel
+                    </button>
+
+                    <button class="btn btn-primary">
+                        Save Venue
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="modal-overlay"
+         id="seat-modal">
+
+        <div class="modal">
+
+            <h2 class="modal-title">
+                Reserved Seats
+            </h2>
+
+            <p class="page-subtitle"
+               id="seat-summary"></p>
+
+            <form id="seat-form"
+                  style="display: flex; gap: .5rem;">
+
+                <input id="seat-number"
+                       required
+                       maxlength="50"
+                       placeholder="e.g. A-01">
+
+                <button class="btn btn-primary">
+                    Add
+                </button>
+
+            </form>
+
+            <div id="seat-list"
+                 style="margin-top: 1rem;"></div>
+
+            <div class="modal-actions">
+
+                <button type="button"
+                        class="btn btn-ghost"
+                        onclick="AdminEvents.close('seat-modal')">
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/admin-events.js"></script>
+
+</body>
+
+</html>

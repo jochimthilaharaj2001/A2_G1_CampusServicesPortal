@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fee Payments - Campus Portal</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div class="page-bg"></div>
+
+    <nav class="navbar">
+        <a href="/dashboard.html" class="nav-brand">
+            <div class="nav-logo">🎓</div>
+            Campus Portal
+        </a>
+
+        <div class="nav-links">
+            <a href="/dashboard.html" class="nav-link">
+                Dashboard
+            </a>
+
+            <a href="/labs.html" class="nav-link">
+                Lab Reservations
+            </a>
+
+            <a href="/complaints.html" class="nav-link">
+                Complaints
+            </a>
+
+            <a href="/fees.html" class="nav-link active">
+                Fees
+            </a>
+        </div>
+
+        <div class="nav-user">
+            <a href="/profile.html"
+               class="user-avatar profile-nav-avatar"
+               id="nav-avatar">
+                U
+            </a>
+
+            <span id="nav-name">Student</span>
+
+            <button id="logout-btn"
+                    class="btn btn-ghost btn-sm">
+                Sign Out
+            </button>
+        </div>
+    </nav>
+
+    <main class="page-wrapper">
+        <div class="container" style="max-width: 1100px;">
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">
+                        Fee Payments
+                    </h1>
+
+                    <p class="page-subtitle">
+                        View outstanding charges, complete simulated payments
+                        and print receipts.
+                    </p>
+                </div>
+            </div>
+
+            <div id="fee-alert"
+                 class="alert global-alert"></div>
+
+            <section class="card"
+                     style="padding: 1.5rem;">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fee</th>
+                                <th>Billing Period</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="fees-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/fees.js"></script>
+</body>
+
+</html>

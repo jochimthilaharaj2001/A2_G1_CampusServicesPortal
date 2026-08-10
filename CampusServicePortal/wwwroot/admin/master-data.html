@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Master Data — Campus Services Portal</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    .tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .tab-btn { border:1px solid var(--border); background:transparent; color:var(--text-secondary);
+      padding:0.5rem 1rem; border-radius:var(--radius-sm); cursor:pointer; }
+    .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .panel { display:none; }
+    .panel.active { display:block; }
+  </style>
+</head>
+<body id="master-data-page">
+<div class="page-bg"></div>
+
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    Campus Portal
+    <span class="badge badge-warning" style="margin-left:0.5rem;">Admin</span>
+  </a>
+  <div class="nav-links">
+    <a href="/admin/index.html" class="nav-link">Dashboard</a>
+    <a href="/admin/students.html" class="nav-link">Students</a>
+    <a href="/admin/master-list.html" class="nav-link">Master List</a>
+    <a href="/admin/master-data.html" class="nav-link active">Master Data</a>
+  </div>
+  <div class="nav-user">
+    <div class="user-avatar" id="nav-avatar">A</div>
+    <span style="font-size:0.875rem;color:var(--text-secondary);" id="nav-name">Admin</span>
+    <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container" style="max-width:960px;">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Master Data</h1>
+        <p class="page-subtitle">Manage Faculties and Certificate Types (BRD Module 9)</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="faculties">Faculties</button>
+      <button class="tab-btn" data-tab="certs">Certificate Types</button>
+    </div>
+
+    <!-- Faculties -->
+    <div id="panel-faculties" class="panel active">
+      <div class="card" style="margin-bottom:1rem;">
+        <h2 style="font-size:1rem;margin-bottom:1rem;">Add Faculty</h2>
+        <form id="faculty-form" style="display:grid;grid-template-columns:2fr 1fr auto;gap:0.75rem;align-items:end;">
+          <div class="form-group" style="margin:0;">
+            <label for="faculty-name">Name</label>
+            <input id="faculty-name" required maxlength="100" placeholder="e.g. Computing"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label for="faculty-code">Code</label>
+            <input id="faculty-code" maxlength="20" placeholder="COMP"/>
+          </div>
+          <button type="submit" class="btn btn-primary" id="faculty-submit">Add</button>
+        </form>
+        <div id="faculty-alert" class="alert global-alert" style="margin-top:0.75rem;"></div>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Code</th><th>Students</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="faculties-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Certificate Types -->
+    <div id="panel-certs" class="panel">
+      <div class="card" style="margin-bottom:1rem;">
+        <h2 style="font-size:1rem;margin-bottom:1rem;">Add Certificate Type</h2>
+        <form id="cert-form" style="display:grid;grid-template-columns:1.5fr 2fr auto;gap:0.75rem;align-items:end;">
+          <div class="form-group" style="margin:0;">
+            <label for="cert-name">Name</label>
+            <input id="cert-name" required maxlength="100" placeholder="e.g. Transcript"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label for="cert-desc">Description</label>
+            <input id="cert-desc" maxlength="300" placeholder="Optional description"/>
+          </div>
+          <button type="submit" class="btn btn-primary" id="cert-submit">Add</button>
+        </form>
+        <div id="cert-alert" class="alert global-alert" style="margin-top:0.75rem;"></div>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Description</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="certs-tbody">
+            <tr><td colspan="4" style="text-align:center;padding:2rem;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin-master-data.js"></script>
+</body>
+</html>

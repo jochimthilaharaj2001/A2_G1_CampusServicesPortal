@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Student dashboard for the Campus Services Portal." />
+  <title>Student Dashboard - Campus Services Portal</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body id="student-dashboard-page">
+  <div class="page-bg"></div>
+
+  <nav class="navbar">
+    <a href="/dashboard.html" class="nav-brand">
+      <div class="nav-logo">🎓</div>
+      Campus Portal
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="/labs.html" class="nav-link">Lab Reservations</a>
+      <a href="/complaints.html" class="nav-link">Complaints</a>
+      <a href="/fees.html" class="nav-link">Fees</a>
+    </div>
+    <div class="nav-user">
+      <a href="/profile.html" class="user-avatar profile-nav-avatar" id="nav-avatar" aria-label="My Profile" title="My Profile">U</a>
+      <span class="nav-user-name" id="nav-name">Student</span>
+      <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+    <div class="container student-dashboard-container">
+      <section class="student-dashboard-hero">
+        <div>
+          <p class="eyebrow">STUDENT DASHBOARD</p>
+          <h1 class="page-title">Welcome back, <span id="dashboard-first-name">Student</span></h1>
+          <p class="page-subtitle">Keep track of your campus services in one place.</p>
+        </div>
+        <a href="/labs.html" class="btn btn-primary">Reserve a Lab Seat</a>
+      </section>
+
+      <div id="dashboard-alert" class="alert global-alert" role="alert"></div>
+
+      <section class="dashboard-stat-grid" aria-label="Student summary">
+        <article class="dashboard-stat-card">
+          <div class="dashboard-stat-icon icon-lab">💻</div>
+          <div>
+            <p class="dashboard-stat-label">Upcoming Lab Bookings</p>
+            <p class="dashboard-stat-value" id="stat-upcoming-labs">-</p>
+          </div>
+        </article>
+        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">📣</div><div><p class="dashboard-stat-label">Open Complaints</p><p class="dashboard-stat-value" id="stat-open-complaints">-</p></div></article><article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">🔔</div><div><p class="dashboard-stat-label">Unread Notifications</p><p class="dashboard-stat-value" id="stat-unread-notifications">-</p></div></article>
+        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-status">₨</div><div><p class="dashboard-stat-label">Outstanding Fees</p><p class="dashboard-stat-text" id="stat-outstanding-fees">-</p></div></article>
+        <article class="dashboard-stat-card">
+          <div class="dashboard-stat-icon icon-bookings">📅</div>
+          <div>
+            <p class="dashboard-stat-label">Total Lab Reservations</p>
+            <p class="dashboard-stat-value" id="stat-total-bookings">-</p>
+          </div>
+        </article>
+        <article class="dashboard-stat-card">
+          <div class="dashboard-stat-icon icon-profile">🎓</div>
+          <div>
+            <p class="dashboard-stat-label">Faculty</p>
+            <p class="dashboard-stat-text" id="stat-faculty">Loading...</p>
+          </div>
+        </article>
+        <article class="dashboard-stat-card">
+          <div class="dashboard-stat-icon icon-status">✓</div>
+          <div>
+            <p class="dashboard-stat-label">Account Status</p>
+            <p class="dashboard-stat-text" id="stat-account-status">Loading...</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-content-grid">
+        <article class="card dashboard-panel">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h2>Upcoming Lab Bookings</h2>
+              <p>Your confirmed and pending lab reservations.</p>
+            </div>
+            <a href="/labs.html#my-reservations" class="text-link">View all</a>
+          </div>
+          <div id="upcoming-bookings-loading" class="dashboard-loading">
+            <div class="spinner"></div>
+            <span>Loading bookings...</span>
+          </div>
+          <div id="upcoming-bookings-list" class="upcoming-bookings-list" hidden></div>
+          <div id="upcoming-bookings-empty" class="dashboard-empty" hidden>
+            <div class="dashboard-empty-icon">🗓️</div>
+            <h3>No upcoming lab bookings</h3>
+            <p>Reserve a computer seat or science lab time slot when you need one.</p>
+            <a href="/labs.html" class="btn btn-outline btn-sm">Book a Lab</a>
+          </div>
+        </article>
+
+        <aside class="card dashboard-panel profile-snapshot">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h2>My Profile</h2>
+              <p>Your student information.</p>
+            </div>
+            <a href="/profile.html" class="text-link">Open profile</a>
+          </div>
+          <div class="dashboard-profile-row">
+            <div class="dashboard-profile-avatar" id="dashboard-profile-avatar">?</div>
+            <div>
+              <h3 id="dashboard-full-name">Loading...</h3>
+              <p id="dashboard-index-number">Student index</p>
+            </div>
+          </div>
+          <dl class="dashboard-profile-details">
+            <div>
+              <dt>Degree</dt>
+              <dd id="dashboard-degree">-</dd>
+            </div>
+            <div>
+              <dt>Enrolment</dt><dd id="dashboard-enrollment-year">-</dd>
+            </div>
+            <div><dt>Email</dt><dd id="dashboard-email">-</dd>
+              </div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="dashboard-content-grid" style="margin-top:1.25rem">
+        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Recent Complaints</h2><p>Track updates to your submitted issues.</p></div><a href="/complaints.html" class="text-link">Open complaints</a></div><div id="dashboard-complaints" class="upcoming-bookings-list"></div></article>
+        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Fee Summary</h2><p>Outstanding fees and payment history.</p></div><a href="/fees.html" class="text-link">Open fees</a></div><div id="dashboard-fees" class="upcoming-bookings-list"></div></article><article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Notifications</h2><p>Recent updates from campus services.</p></div><a href="/notifications.html" class="text-link">View all</a></div><div id="dashboard-notifications" class="upcoming-bookings-list"></div></article>
+      </section>
+
+      <section class="dashboard-services-section">
+        <div class="dashboard-section-heading">
+          <div>
+            <h2>Campus Services</h2>
+            <p>Access campus services and track each request in one place.</p>
+          </div>
+        </div>
+        <div class="dashboard-service-grid">
+          <article class="dashboard-service-card active-service">
+            <span class="dashboard-service-icon">🏠</span>
+            <h3>Hostel Applications</h3>
+            <p>Apply for and track accommodation requests.</p>
+            <a href="/hostel-applications.html" class="text-link">Open applications</a>
+          </article>
+          <article class="dashboard-service-card active-service">
+            <span class="dashboard-service-icon">🔬</span>
+            <h3>Lab Reservations</h3>
+            <p>Reserve a computer seat or science lab time slot.</p>
+            <a href="/labs.html" class="text-link">Open reservations</a>
+          </article>
+          <article class="dashboard-service-card active-service">
+            <span class="dashboard-service-icon">📣</span>
+            <h3>Event Registrations</h3>
+            <p>Discover events and manage your registrations.</p>
+            <a href="/events.html" class="text-link">Open events</a>
+          </article>
+          <article class="dashboard-service-card">
+            <span class="dashboard-service-icon">📄</span>
+            <h3>Fee Payments</h3>
+            <p>View charges, pay outstanding fees and print receipts.</p>
+            <a href="/fees.html" class="text-link">Open fees</a>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

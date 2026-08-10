@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Student Directory — Campus Services Portal Admin</title>
+<meta name="description" content="Admin view of all registered students — search, filter, activate and deactivate accounts."/>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+  code { font-family: 'Courier New', monospace; }
+</style>
+</head>
+<body id="students-admin-page">
+<div class="page-bg"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/admin/students.html" class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    Campus Portal
+    <span class="badge badge-warning" style="margin-left:0.5rem;">Admin</span>
+  </a>
+  <div class="nav-links">
+    <a href="/admin/index.html" class="nav-link">Dashboard</a>
+    <a href="/admin/students.html" class="nav-link active">Students</a>
+    <a href="/admin/master-list.html" class="nav-link">Master List</a>
+    <a href="/admin/master-data.html" class="nav-link">Master Data</a>
+  </div>
+  <div class="nav-user">
+    <div class="user-avatar" id="nav-avatar">A</div>
+    <span style="font-size:0.875rem;color:var(--text-secondary);" id="nav-name">Admin</span>
+    <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Student Directory</h1>
+        <p class="page-subtitle" id="result-count" style="color:var(--text-secondary);">Loading…</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+          ➕ Add Student
+        </button>
+        <a href="/admin/master-list.html" class="btn btn-outline btn-sm">
+          📋 Manage Master List
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input id="search-input" type="search" placeholder="Search by name, index number or email…"/>
+      </div>
+      <select id="faculty-filter" style="width:auto;min-width:180px;">
+        <option value="">All Faculties</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('search-input').value='';document.getElementById('faculty-filter').value='';loadStudents()">
+        ✕ Clear
+      </button>
+    </div>
+
+    <!-- Students Table -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Index Number</th>
+            <th>Faculty</th>
+            <th>Programme</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="students-tbody">
+          <tr>
+            <td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">
+              <div class="spinner" style="width:28px;height:28px;margin:0 auto 0.5rem;"></div>Loading…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="pagination"></div>
+
+  </div>
+</div>
+
+<!-- Deactivation Confirmation Modal -->
+<div id="deactivate-modal" class="modal-overlay">
+  <div class="modal">
+    <h2 class="modal-title">⚠️ Deactivate Student Account</h2>
+    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1rem;">
+      You are about to deactivate the account for:
+      <strong id="deactivate-name" style="color:var(--text-primary);"></strong>
+    </p>
+
+    <div id="deactivation-blockers" style="margin-bottom:1rem;">
+      <div class="flex-center" style="gap:0.75rem;padding:0.75rem 0;">
+        <div class="spinner" style="width:20px;height:20px;"></div>
+        Checking active commitments…
+      </div>
+    </div>
+
+    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.25rem;">
+      The student's data and history will be preserved. They will not be able to log in until reactivated.
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDeactivateModal()">Cancel</button>
+      <button id="confirm-deactivate-btn" class="btn btn-danger" disabled>
+        <div class="btn-spinner"></div>
+        <span class="btn-label">Deactivate Account</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Student Modal -->
+<div id="create-modal" class="modal-overlay">
+  <div class="modal" style="max-width:600px;">
+    <h2 class="modal-title">Create Student Record</h2>
+    <div id="create-alert" style="display:none;margin-bottom:1rem;"></div>
+    <form id="create-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="form-group">
+          <label>Index Number <span style="color:red">*</span></label>
+          <input type="text" id="create-index" required/>
+        </div>
+        <div class="form-group">
+          <label>Full Name <span style="color:red">*</span></label>
+          <input type="text" id="create-fullname" required/>
+        </div>
+        <div class="form-group">
+          <label>Email Address <span style="color:red">*</span></label>
+          <input type="email" id="create-email" required/>
+        </div>
+        <div class="form-group">
+          <label>Password (Optional)</label>
+          <input type="password" id="create-password" placeholder="Auto-generated if empty"/>
+        </div>
+        <div class="form-group">
+          <label>Faculty <span style="color:red">*</span></label>
+          <select id="create-faculty" required>
+            <option value="">Select Faculty...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Degree Program <span style="color:red">*</span></label>
+          <select id="create-degree" required disabled>
+            <option value="">Select a faculty first...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Enrollment Year <span style="color:red">*</span></label>
+          <input type="number" id="create-year" min="2000" max="2100" required/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="create-phone"/>
+        </div>
+        <div class="form-group">
+          <label>Contact Number (Emergency)</label>
+          <input type="text" id="create-contact"/>
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="create-address"/>
+        </div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+        <button type="submit" id="create-submit-btn" class="btn btn-primary">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">Create Record</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/students.js"></script>
+</body>
+</html>

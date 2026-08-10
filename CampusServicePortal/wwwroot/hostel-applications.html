@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostel Applications - Campus Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="page-bg"></div>
+  <nav class="navbar">
+    <a href="/dashboard.html" class="nav-brand"><div class="nav-logo">🎓</div>Campus Portal</a>
+    <div class="nav-links"></div>
+    <div class="nav-user">
+      <a href="/profile.html" class="user-avatar profile-nav-avatar" id="nav-avatar">U</a>
+      <span id="nav-name">Student</span>
+      <button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+    <div class="container" style="max-width:1100px">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Hostel Applications</h1>
+          <p class="page-subtitle">Apply for accommodation and track your application status.</p>
+        </div>
+      </div>
+
+      <div id="hostel-application-alert" class="alert global-alert"></div>
+
+      <div class="dashboard-content-grid">
+        <section class="card dashboard-panel">
+          <h2 style="margin-top:0">New application</h2>
+          <p class="page-subtitle">Choose your preferred hostel and provide the relevant details.</p>
+          <form id="hostel-application-form">
+            <div class="form-group">
+              <label for="hostel-id">Preferred hostel</label>
+              <select id="hostel-id" required><option value="">Loading hostels...</option></select>
+            </div>
+            <div class="form-group">
+              <label for="semester">Semester</label>
+              <input id="semester" type="text" maxlength="20" required>
+            </div>
+            <div class="form-group">
+              <label for="special-requirements">Special requirements <span class="form-hint">(optional)</span></label>
+              <textarea id="special-requirements" rows="5" maxlength="255"></textarea>
+            </div>
+            <button id="submit-hostel-application" class="btn btn-primary" type="submit">Submit Application</button>
+          </form>
+        </section>
+
+        <section class="card dashboard-panel">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h2>My applications</h2>
+              <p>Your current and previous accommodation requests.</p>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Hostel</th><th>Semester</th><th>Applied</th><th>Room</th><th>Status</th></tr></thead>
+              <tbody id="my-hostel-applications"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/student-hostel-applications.js"></script>
+</body>
+</html>

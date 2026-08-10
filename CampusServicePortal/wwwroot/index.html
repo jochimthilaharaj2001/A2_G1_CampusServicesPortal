@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Campus Services Portal</title>
+<meta name="description" content="Campus Services Portal — University Student Self-Service"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-bg"></div>
+<div class="flex-center" style="min-height:100vh;">
+  <div style="text-align:center;">
+    <div class="spinner"></div>
+    <p style="color:var(--text-secondary);margin-top:1rem;font-size:0.875rem;">Loading…</p>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script>
+  // Redirect based on auth state
+  if (Auth.isLoggedIn()) {
+    const user = Auth.getUser();
+    window.location.href = user?.role === 'Admin' ? '/admin/index.html' : '/profile.html';
+  } else {
+    window.location.href = '/login.html';
+  }
+</script>
+</body>
+</html>
