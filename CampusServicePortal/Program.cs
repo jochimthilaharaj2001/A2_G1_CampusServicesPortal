@@ -4,6 +4,8 @@ using CampusServicePortal.Repositories.Implementation;
 using CampusServicePortal.Repositories.Interfaces;
 using CampusServicePortal.Services.Implementation;
 using CampusServicePortal.Services.Interfaces;
+using CampusServicesPortal.Hostel.Repositories;
+using CampusServicesPortal.Hostel.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,13 +27,14 @@ namespace CampusServicePortal
                     builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Campus Services Portal API",
                     Version = "v1",
-                    Description = "REST API for University Campus Services Portal (BRD Revision 2)"
+                    Description = "REST API for University Campus Services Portal"
                 });
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -60,6 +63,7 @@ namespace CampusServicePortal
                 });
             });
 
+            // JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -69,32 +73,67 @@ namespace CampusServicePortal
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
+
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
+
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                            Encoding.UTF8.GetBytes(
+                                builder.Configuration["Jwt:Key"]!))
                     };
                 });
 
             builder.Services.AddAuthorization();
 
+            // Helpers
             builder.Services.AddScoped<JwtHelper>();
+
+            // ============================================================
+            // REPOSITORIES
+            // ============================================================
+
+            // Authentication / Users
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+            // Hostel
+            builder.Services.AddScoped<IHostelRepository, HostelRepository>();
+            builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+            builder.Services.AddScoped<IHostelApplicationRepository, HostelApplicationRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+            // Student
             builder.Services.AddScoped<IStudentRepository, StudentRepository>();
             builder.Services.AddScoped<IStudentMasterListRepository, StudentMasterListRepository>();
-            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
             builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
-            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
 
+            // Certificate / Lab / Password
+            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
+            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
+            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+
+            // ============================================================
+            // SERVICES
+            // ============================================================
+
+            // Authentication / Users
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            // Hostel
+            builder.Services.AddScoped<IHostelService, HostelService>();
+            builder.Services.AddScoped<IRoomService, RoomService>();
+            builder.Services.AddScoped<IHostelApplicationService, HostelApplicationService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+
+            // Student
             builder.Services.AddScoped<IStudentMasterListService, StudentMasterListService>();
             builder.Services.AddScoped<IStudentService, StudentService>();
             builder.Services.AddScoped<IFacultyService, FacultyService>();
+
+            // Certificate / Lab / Email
             builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
-            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ILabReservationService, LabReservationService>();
             builder.Services.AddScoped<ILabService, LabService>();
             builder.Services.AddScoped<IComplaintService, ComplaintService>();
@@ -105,13 +144,26 @@ namespace CampusServicePortal
 
             var app = builder.Build();
 
+            // ============================================================
+            // DATABASE SEEDING
+            // ============================================================
+
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                // Keep the LocalDB schema in sync before seed queries access newly added tables.
+ var db = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+
+                // Keep the LocalDB schema in sync before seed queries
+                // access newly added columns/tables.
                 db.Database.Migrate();
+
+                DatabaseSeeder.Seed(db);
                 DatabaseSeeder.Seed(db);
             }
+
+            // ============================================================
+            // HTTP PIPELINE
+            // ============================================================
 
             if (app.Environment.IsDevelopment())
             {
@@ -122,10 +174,13 @@ namespace CampusServicePortal
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
+            app.UseHttpsRedirection();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+
             app.Run();
         }
     }
