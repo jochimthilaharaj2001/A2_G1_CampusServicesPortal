@@ -37,8 +37,10 @@ const StudentDashboard = {
             bookingsEmpty: document.getElementById('upcoming-bookings-empty')
             ,openComplaints: document.getElementById('stat-open-complaints')
             ,outstandingFees: document.getElementById('stat-outstanding-fees')
+            ,unreadNotifications: document.getElementById('stat-unread-notifications')
             ,complaints: document.getElementById('dashboard-complaints')
             ,fees: document.getElementById('dashboard-fees')
+            ,notifications: document.getElementById('dashboard-notifications')
         };
     },
 
@@ -63,6 +65,11 @@ const StudentDashboard = {
             this.renderBookings(bookings);
             const dashboardResult = await api.get('/api/dashboard/student', true);
             if (dashboardResult?.ok) this.renderServices(dashboardResult.data);
+
+            const notificationsResult = await api.get('/api/notifications/mine', true);
+            const notifications = notificationsResult?.ok && Array.isArray(notificationsResult.data) ? notificationsResult.data : [];
+            this.dom.unreadNotifications.textContent = notifications.filter(notification => !notification.isRead).length;
+            this.dom.notifications.textContent = notifications.length ? notifications[0].title + ': ' + notifications[0].message : 'No notifications yet.';
         } catch (error) {
             console.error('Failed to load student dashboard:', error);
             UI.showAlert('dashboard-alert', 'error', error.message || 'Unable to load the dashboard. Please try again.');

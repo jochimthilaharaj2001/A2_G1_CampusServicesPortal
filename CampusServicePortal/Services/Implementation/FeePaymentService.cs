@@ -2,11 +2,12 @@ using CampusServicePortal.Data;
 using CampusServicePortal.DTOs.Fees;
 using CampusServicePortal.Models;
 using CampusServicePortal.Services.Interfaces;
+using CampusServicesPortal.Hostel.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusServicePortal.Services.Implementation;
 
-public class FeePaymentService(ApplicationDbContext context) : IFeePaymentService
+public class FeePaymentService(ApplicationDbContext context, INotificationQueue notifications) : IFeePaymentService
 {
     public async Task<IReadOnlyList<FeeTypeDto>> GetFeeTypesAsync(bool includeInactive = false) =>
         await context.FeeTypes.AsNoTracking().Where(f => includeInactive || f.IsActive).OrderBy(f => f.Name)
@@ -24,6 +25,7 @@ public class FeePaymentService(ApplicationDbContext context) : IFeePaymentServic
     }
 
     public async Task<IReadOnlyList<FeePaymentDto>> GetForUserAsync(int userId) => await Query().Where(f => f.UserId == userId).OrderByDescending(f => f.AssignedAt).ToListAsync();
+
     public async Task<IReadOnlyList<FeePaymentDto>> GetAllAsync(string? status, int? feeTypeId)
     {
         var query = Query();
@@ -43,10 +45,29 @@ public class FeePaymentService(ApplicationDbContext context) : IFeePaymentServic
         else students = students.Where(s => s.Faculty == dto.Faculty!.Trim());
         var targets = await students.ToListAsync();
         if (!targets.Any()) throw new InvalidOperationException("No active students match this assignment.");
+
         var period = dto.BillingPeriod.Trim();
         var userIds = targets.Select(s => s.UserId).ToList();
         var alreadyAssigned = await context.FeePayments.Where(f => userIds.Contains(f.UserId) && f.FeeTypeId == dto.FeeTypeId && f.BillingPeriod == period && f.Status == "Outstanding").Select(f => f.UserId).ToListAsync();
-        foreach (var student in targets.Where(s => !alreadyAssigned.Contains(s.UserId))) context.FeePayments.Add(new FeePayment { UserId = student.UserId, FeeTypeId = dto.FeeTypeId, BillingPeriod = period, Amount = dto.Amount, Notes = dto.Notes?.Trim() });
+
+        foreach (var student in targets.Where(student => !alreadyAssigned.Contains(student.UserId)))
+        {
+            context.FeePayments.Add(new FeePayment
+            {
+                UserId = student.UserId,
+                FeeTypeId = dto.FeeTypeId,
+                BillingPeriod = period,
+                Amount = dto.Amount,
+                Notes = dto.Notes?.Trim()
+            });
+
+            await notifications.QueueForStudentAsync(
+                student.StudentId,
+                "FeeAssigned",
+                "New fee assignment",
+                $"{feeType.Name} for {period} has been assigned to your account.");
+        }
+
         await context.SaveChangesAsync();
         return targets.Count - alreadyAssigned.Count;
     }
@@ -57,19 +78,43 @@ public class FeePaymentService(ApplicationDbContext context) : IFeePaymentServic
         payment.BillingPeriod = dto.BillingPeriod.Trim(); payment.Amount = dto.Amount; payment.Notes = dto.Notes?.Trim();
         await context.SaveChangesAsync(); return await GetByIdAsync(id);
     }
+
     public async Task CancelAsync(int id)
     {
-        var payment = await EditablePaymentAsync(id); payment.Status = "Cancelled"; payment.CancelledAt = DateTime.UtcNow; await context.SaveChangesAsync();
+        var payment = await EditablePaymentAsync(id);
+        payment.Status = "Cancelled";
+        payment.CancelledAt = DateTime.UtcNow;
+
+        await notifications.QueueForUserAsync(
+            payment.UserId,
+            "FeeCancelled",
+            "Fee assignment cancelled",
+            "A fee assignment on your account has been cancelled.");
+
+        await context.SaveChangesAsync();
     }
+
     public async Task<FeePaymentDto> PayAsync(int id, int userId, bool isAdmin)
     {
         var payment = await context.FeePayments.FindAsync(id) ?? throw new KeyNotFoundException("Fee payment not found.");
         if (!isAdmin && payment.UserId != userId) throw new UnauthorizedAccessException();
         if (payment.Status == "Paid") throw new InvalidOperationException("This fee has already been paid.");
         if (payment.Status != "Outstanding") throw new InvalidOperationException("Only outstanding fees can be paid.");
-        payment.Status = "Paid"; payment.PaidAt = DateTime.UtcNow; payment.ReceiptNumber = $"CSP-{DateTime.UtcNow:yyyyMMdd}-{payment.FeePaymentId:D6}";
-        await context.SaveChangesAsync(); return await GetByIdAsync(id);
+
+        payment.Status = "Paid";
+        payment.PaidAt = DateTime.UtcNow;
+        payment.ReceiptNumber = $"CSP-{DateTime.UtcNow:yyyyMMdd}-{payment.FeePaymentId:D6}";
+
+        await notifications.QueueForUserAsync(
+            payment.UserId,
+            "FeePaid",
+            "Fee payment received",
+            $"Your payment receipt is {payment.ReceiptNumber}.");
+
+        await context.SaveChangesAsync();
+        return await GetByIdAsync(id);
     }
+
     public async Task<ReceiptDto> GetReceiptAsync(int id, int userId, bool isAdmin)
     {
         var payment = await GetByIdAsync(id);
@@ -77,6 +122,7 @@ public class FeePaymentService(ApplicationDbContext context) : IFeePaymentServic
         if (payment.Status != "Paid") throw new InvalidOperationException("A receipt is available only after payment.");
         return new ReceiptDto { FeePaymentId = payment.FeePaymentId, UserId = payment.UserId, StudentId = payment.StudentId, StudentName = payment.StudentName, IndexNumber = payment.IndexNumber, FeeTypeId = payment.FeeTypeId, FeeTypeName = payment.FeeTypeName, BillingPeriod = payment.BillingPeriod, Amount = payment.Amount, Status = payment.Status, Notes = payment.Notes, ReceiptNumber = payment.ReceiptNumber, AssignedAt = payment.AssignedAt, PaidAt = payment.PaidAt, GeneratedAt = DateTime.UtcNow };
     }
+
     private async Task<FeePayment> EditablePaymentAsync(int id)
     {
         var payment = await context.FeePayments.FindAsync(id) ?? throw new KeyNotFoundException("Fee payment not found.");
@@ -84,6 +130,8 @@ public class FeePaymentService(ApplicationDbContext context) : IFeePaymentServic
         if (payment.Status != "Outstanding") throw new InvalidOperationException("Only outstanding fee assignments can be changed.");
         return payment;
     }
+
     private IQueryable<FeePaymentDto> Query() => context.FeePayments.AsNoTracking().Include(f => f.User).ThenInclude(u => u!.Student).Include(f => f.FeeType).Select(f => new FeePaymentDto { FeePaymentId = f.FeePaymentId, UserId = f.UserId, StudentId = f.User!.Student != null ? f.User.Student.StudentId : 0, StudentName = f.User.FullName, IndexNumber = f.User.Student != null ? f.User.Student.IndexNumber : string.Empty, FeeTypeId = f.FeeTypeId, FeeTypeName = f.FeeType!.Name, BillingPeriod = f.BillingPeriod, Amount = f.Amount, Status = f.Status, Notes = f.Notes, ReceiptNumber = f.ReceiptNumber, AssignedAt = f.AssignedAt, PaidAt = f.PaidAt });
+
     private async Task<FeePaymentDto> GetByIdAsync(int id) => await Query().FirstAsync(f => f.FeePaymentId == id);
 }

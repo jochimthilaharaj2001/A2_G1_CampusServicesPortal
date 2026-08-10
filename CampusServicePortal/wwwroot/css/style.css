@@ -1603,3 +1603,253 @@ a.admin-link {
     .upcoming-booking-item { align-items: flex-start; flex-wrap: wrap; }
     .upcoming-booking-item .badge { margin-left: 60px; }
 }
+
+/* Module 8 student notifications */
+.notification-list { display: grid; gap: 1rem; }
+.notification-item { padding: 1.15rem 1.25rem; border: 1px solid var(--border-color, #334155); border-radius: 0.85rem; background: var(--card-bg, #1e293b); }
+.notification-unread { border-color: #6366f1; box-shadow: 0 0 0 1px #6366f133; }
+.notification-item-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.notification-item h2 { margin: 0.3rem 0 0; font-size: 1.05rem; }
+.notification-item p { margin: 0.85rem 0; color: var(--text-muted, #94a3b8); line-height: 1.5; }
+.notification-item time { color: var(--text-muted, #94a3b8); font-size: 0.82rem; white-space: nowrap; }
+.notification-type { color: #a5b4fc; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.notification-read { color: #34d399; font-size: 0.85rem; font-weight: 600; }
+
+
+/* ============================================================================
+   SIDEBAR NAVIGATION OVERRIDE
+   Desktop: fixed left navigation. Mobile/tablet: compact top navigation.
+   ============================================================================ */
+@media (min-width: 901px) {
+    .navbar,
+    .navbar.admin-navbar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 1000;
+        width: 250px;
+        height: 100vh;
+        min-height: 100vh;
+        padding: 1.25rem 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 1.25rem;
+        border-right: 1px solid var(--border);
+        border-bottom: 0;
+        overflow-y: auto;
+    }
+
+    .navbar .nav-brand {
+        width: 100%;
+        padding: 0.25rem 0.5rem 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .navbar .nav-links,
+    .navbar.admin-navbar .nav-links {
+        width: 100%;
+        flex: 0 0 auto;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 0.35rem;
+        white-space: normal;
+    }
+
+    .navbar .nav-link {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border-radius: var(--radius);
+    }
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link.active {
+        background: var(--bg-card);
+        color: var(--primary);
+    }
+
+    .navbar .nav-user {
+        width: 100%;
+        margin-top: auto;
+        padding: 1rem 0.5rem 0;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .navbar .nav-user #nav-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .navbar .nav-user #logout-btn {
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .page-wrapper {
+        margin-left: 250px;
+        min-height: 100vh;
+    }
+}
+
+@media (max-width: 900px) {
+    .navbar,
+    .navbar.admin-navbar {
+        position: sticky;
+        inset: auto;
+        width: 100%;
+        height: auto;
+        min-height: 64px;
+        padding: 0.6rem 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        overflow: visible;
+    }
+
+    .navbar .nav-brand {
+        width: auto;
+        padding: 0;
+        border-bottom: 0;
+    }
+
+    .navbar .nav-links,
+    .navbar.admin-navbar .nav-links {
+        width: auto;
+        flex: 1 1 auto;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .navbar .nav-link {
+        width: auto;
+        padding: 0.45rem 0.6rem;
+    }
+
+    .navbar .nav-user {
+        width: auto;
+        margin-top: 0;
+        padding: 0;
+        border-top: 0;
+        flex-wrap: nowrap;
+    }
+
+    .navbar .nav-user #logout-btn {
+        width: auto;
+        margin-top: 0;
+    }
+
+    .page-wrapper {
+        margin-left: 0;
+    }
+}
+/* Sidebar collapse state */
+@media (min-width: 901px) {
+    .sidebar-toggle {
+        position: absolute;
+        top: 0.85rem;
+        right: 0.75rem;
+        z-index: 2;
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 1.15rem;
+        line-height: 1;
+        transition: var(--transition);
+    }
+
+    .sidebar-toggle:hover {
+        color: var(--primary);
+        border-color: var(--primary-light);
+        transform: scale(1.05);
+    }
+
+    body.sidebar-collapsed .navbar,
+    body.sidebar-collapsed .navbar.admin-navbar {
+        width: 76px;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
+    }
+
+    body.sidebar-collapsed .page-wrapper {
+        margin-left: 76px;
+    }
+
+    body.sidebar-collapsed .navbar .nav-brand {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+        font-size: 0;
+    }
+
+    body.sidebar-collapsed .navbar .nav-brand .nav-logo {
+        margin: 0 auto;
+    }
+
+    body.sidebar-collapsed .navbar .nav-brand .badge {
+        display: none;
+    }
+
+    body.sidebar-collapsed .navbar .nav-link {
+        padding-left: 0;
+        padding-right: 0;
+        text-align: center;
+        font-size: 0;
+    }
+
+    body.sidebar-collapsed .navbar .nav-link::before {
+        content: attr(data-short);
+        display: inline-block;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    body.sidebar-collapsed .navbar .nav-user {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    body.sidebar-collapsed .navbar .nav-user #nav-name {
+        display: none;
+    }
+
+    body.sidebar-collapsed .navbar .nav-user #logout-btn {
+        width: 36px;
+        height: 30px;
+        padding: 0;
+        font-size: 0;
+    }
+
+    body.sidebar-collapsed .navbar .nav-user #logout-btn::before {
+        content: '↪';
+        font-size: 1rem;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle {
+        right: 0.65rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .sidebar-toggle {
+        display: none;
+    }
+}

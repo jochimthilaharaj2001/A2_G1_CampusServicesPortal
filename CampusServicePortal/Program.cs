@@ -40,7 +40,7 @@ namespace CampusServicePortal
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
-                    Description = "Enter JWT Token like: Bearer {your_token}",
+                    Description = "Enter JWT token as: Bearer {token}",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.Http,
                     Scheme = "bearer",
@@ -63,8 +63,8 @@ namespace CampusServicePortal
                 });
             });
 
-            // JWT Authentication
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            builder.Services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -73,10 +73,8 @@ namespace CampusServicePortal
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
-
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(
                                 builder.Configuration["Jwt:Key"]!))
@@ -88,54 +86,40 @@ namespace CampusServicePortal
             // Helpers
             builder.Services.AddScoped<JwtHelper>();
 
-            // ============================================================
-            // REPOSITORIES
-            // ============================================================
-
-            // Authentication / Users
+            // Repositories
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+            builder.Services.AddScoped<IStudentMasterListRepository, StudentMasterListRepository>();
+            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+            builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
+            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
+            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
 
-            // Hostel
             builder.Services.AddScoped<IHostelRepository, HostelRepository>();
             builder.Services.AddScoped<IRoomRepository, RoomRepository>();
             builder.Services.AddScoped<IHostelApplicationRepository, HostelApplicationRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
-            // Student
-            builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-            builder.Services.AddScoped<IStudentMasterListRepository, StudentMasterListRepository>();
-            builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
-
-            // Certificate / Lab / Password
-            builder.Services.AddScoped<ICertificateTypeRepository, CertificateTypeRepository>();
-            builder.Services.AddScoped<ILabReservationRepository, LabReservationRepository>();
-            builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
-
-            // ============================================================
-            // SERVICES
-            // ============================================================
-
-            // Authentication / Users
+            // Authentication and student services
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IStudentMasterListService, StudentMasterListService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
+            builder.Services.AddScoped<IFacultyService, FacultyService>();
+            builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
+            builder.Services.AddScoped<ILabReservationService, LabReservationService>();
+            builder.Services.AddScoped<ILabService, LabService>();
 
-            // Hostel
+            // Hostel and notification services
             builder.Services.AddScoped<IHostelService, HostelService>();
             builder.Services.AddScoped<IRoomService, RoomService>();
             builder.Services.AddScoped<IHostelApplicationService, HostelApplicationService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotificationQueue, NotificationQueue>();
 
-            // Student
-            builder.Services.AddScoped<IStudentMasterListService, StudentMasterListService>();
-            builder.Services.AddScoped<IStudentService, StudentService>();
-            builder.Services.AddScoped<IFacultyService, FacultyService>();
-
-            // Certificate / Lab / Email
-            builder.Services.AddScoped<ICertificateTypeService, CertificateTypeService>();
-            builder.Services.AddScoped<IEmailService, EmailService>();
-            builder.Services.AddScoped<ILabReservationService, LabReservationService>();
-            builder.Services.AddScoped<ILabService, LabService>();
+            // Other modules
             builder.Services.AddScoped<IComplaintService, ComplaintService>();
             builder.Services.AddScoped<IFeePaymentService, FeePaymentService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -144,26 +128,13 @@ namespace CampusServicePortal
 
             var app = builder.Build();
 
-            // ============================================================
-            // DATABASE SEEDING
-            // ============================================================
-
             using (var scope = app.Services.CreateScope())
             {
- var db = scope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // Keep the LocalDB schema in sync before seed queries
-                // access newly added columns/tables.
                 db.Database.Migrate();
-
-                DatabaseSeeder.Seed(db);
                 DatabaseSeeder.Seed(db);
             }
-
-            // ============================================================
-            // HTTP PIPELINE
-            // ============================================================
 
             if (app.Environment.IsDevelopment())
             {
@@ -173,8 +144,6 @@ namespace CampusServicePortal
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
-
-            app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();

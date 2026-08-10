@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using CampusServicesPortal.Hostel.DTOs;
 using CampusServicesPortal.Hostel.Services;
 using RoomModel = CampusServicesPortal.Hostel.Models.Room;
@@ -17,30 +18,25 @@ namespace CampusServicesPortal.Hostel.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RoomModel>>> GetRooms()
-        {
-            var rooms = await _roomService.GetAllAsync();
-            return Ok(rooms);
-        }
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<RoomModel>>> GetRooms() =>
+            Ok(await _roomService.GetAllAsync());
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<ActionResult<RoomModel>> GetRoom(int id)
         {
             var room = await _roomService.GetByIdAsync(id);
-
-            if (room == null)
-                return NotFound();
-
-            return Ok(room);
+            return room is null ? NotFound() : Ok(room);
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<RoomModel>> CreateRoom(CreateRoomDto dto)
         {
             try
             {
                 var room = await _roomService.CreateAsync(dto);
-
                 return CreatedAtAction(nameof(GetRoom), new { id = room.RoomId }, room);
             }
             catch (InvalidOperationException ex)
@@ -49,17 +45,14 @@ namespace CampusServicesPortal.Hostel.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<RoomModel>> UpdateRoom(int id, UpdateRoomDto dto)
         {
             try
             {
                 var room = await _roomService.UpdateAsync(id, dto);
-
-                if (room == null)
-                    return NotFound();
-
-                return Ok(room);
+                return room is null ? NotFound() : Ok(room);
             }
             catch (InvalidOperationException ex)
             {
@@ -67,15 +60,18 @@ namespace CampusServicesPortal.Hostel.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteRoom(int id)
         {
-            var deleted = await _roomService.DeleteAsync(id);
-
-            if (!deleted)
-                return NotFound();
-
-            return NoContent();
+            try
+            {
+                return await _roomService.DeleteAsync(id) ? NoContent() : NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

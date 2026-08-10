@@ -16,7 +16,7 @@ namespace CampusServicesPortal.Hostel.Models
 
         [Required]
         [MaxLength(20)]
-        public string RoomNumber { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
 
         [Required]
         public int Capacity { get; set; }

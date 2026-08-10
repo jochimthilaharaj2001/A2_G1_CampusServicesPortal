@@ -36,7 +36,8 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-            var masterRecord = await _masterListRepository.GetByIndexNumberAsync(dto.IndexNumber);
+            var masterRecord =
+                await _masterListRepository.GetByIndexNumberAsync(dto.IndexNumber);
 
             if (masterRecord == null)
             {
@@ -50,16 +51,23 @@ namespace CampusServicePortal.Services.Implementation
                     $"Index number '{dto.IndexNumber}' is already linked to an existing account.");
             }
 
-            var existingUser = await _authRepository.GetUserByEmailAsync(dto.Email);
+            var existingUser =
+                await _authRepository.GetUserByEmailAsync(dto.Email);
 
             if (existingUser != null)
             {
-                throw new InvalidOperationException("An account with this email address already exists.");
+                throw new InvalidOperationException(
+                    "An account with this email address already exists.");
             }
 
-            var verificationToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+            var verificationToken =
+                Guid.NewGuid().ToString("N") +
+                Guid.NewGuid().ToString("N");
+
             var verificationExpiry = DateTime.UtcNow.AddHours(
-                double.Parse(_configuration["TokenSettings:EmailVerificationExpiryHours"] ?? "24"));
+                double.Parse(
+                    _configuration["TokenSettings:EmailVerificationExpiryHours"]
+                    ?? "24"));
 
             var user = new User
             {
@@ -111,7 +119,7 @@ namespace CampusServicePortal.Services.Implementation
                 Role = "Student",
                 Token = null,
                 Expiration = null,
-                Message = "Registration successful. Please check your email to verify your account before logging in."
+                Message = "Registration successful. Please verify your email before logging in."
             };
         }
 
@@ -123,32 +131,42 @@ namespace CampusServicePortal.Services.Implementation
             {
                 if (string.IsNullOrWhiteSpace(dto.Username))
                 {
-                    throw new UnauthorizedAccessException("Username is required for admin login.");
+                    throw new UnauthorizedAccessException(
+                        "Username is required for admin login.");
                 }
 
-                user = await _authRepository.GetUserByUsernameAsync(dto.Username);
+                user = await _authRepository
+                    .GetUserByUsernameAsync(dto.Username);
 
                 if (user == null || user.Role?.RoleName != "Admin")
                 {
-                    throw new UnauthorizedAccessException("Invalid admin username or password.");
+                    throw new UnauthorizedAccessException(
+                        "Invalid admin username or password.");
                 }
             }
             else
             {
                 if (string.IsNullOrWhiteSpace(dto.Email))
                 {
-                    throw new UnauthorizedAccessException("Email is required for student login.");
+                    throw new UnauthorizedAccessException(
+                        "Email is required for student login.");
                 }
 
-                user = await _authRepository.GetUserByEmailAsync(dto.Email);
+                user = await _authRepository
+                    .GetUserByEmailAsync(dto.Email);
 
                 if (user == null || user.Role?.RoleName != "Student")
                 {
-                    throw new UnauthorizedAccessException("Invalid email or password.");
+                    throw new UnauthorizedAccessException(
+                        "Invalid email or password.");
                 }
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            var passwordValid = BCrypt.Net.BCrypt.Verify(
+                dto.Password,
+                user.PasswordHash);
+
+            if (!passwordValid)
             {
                 return null;
             }
@@ -156,13 +174,13 @@ namespace CampusServicePortal.Services.Implementation
             if (!user.EmailVerified)
             {
                 throw new UnauthorizedAccessException(
-                    "Your account has not been verified yet. Please check your email for the verification link.");
+                    "Your account has not been verified. Please check your email.");
             }
 
             if (!user.IsActive)
             {
                 throw new UnauthorizedAccessException(
-                    "Your account has been deactivated. Please contact the university administration.");
+                    "Your account has been deactivated. Please contact administration.");
             }
 
             return new AuthResponseDto
@@ -180,7 +198,8 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task VerifyEmailAsync(string token)
         {
-            var user = await _authRepository.GetUserByVerificationTokenAsync(token);
+            var user =
+                await _authRepository.GetUserByVerificationTokenAsync(token);
 
             if (user == null)
             {
@@ -188,10 +207,11 @@ namespace CampusServicePortal.Services.Implementation
                     "The verification link is invalid or has already been used.");
             }
 
-            if (user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+            if (!user.EmailVerificationTokenExpiresAt.HasValue ||
+                user.EmailVerificationTokenExpiresAt.Value < DateTime.UtcNow)
             {
                 throw new InvalidOperationException(
-                    "The verification link has expired. Please request a new one.");
+                    "The verification link has expired.");
             }
 
             user.EmailVerified = true;
@@ -213,12 +233,18 @@ namespace CampusServicePortal.Services.Implementation
 
             if (user.EmailVerified)
             {
-                throw new InvalidOperationException("This account has already been verified.");
+                throw new InvalidOperationException(
+                    "This account has already been verified.");
             }
 
-            var newToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+            var newToken =
+                Guid.NewGuid().ToString("N") +
+                Guid.NewGuid().ToString("N");
+
             var expiry = DateTime.UtcNow.AddHours(
-                double.Parse(_configuration["TokenSettings:EmailVerificationExpiryHours"] ?? "24"));
+                double.Parse(
+                    _configuration["TokenSettings:EmailVerificationExpiryHours"]
+                    ?? "24"));
 
             user.EmailVerificationToken = newToken;
             user.EmailVerificationTokenExpiresAt = expiry;
@@ -241,15 +267,18 @@ namespace CampusServicePortal.Services.Implementation
                 return;
             }
 
-            await _passwordResetTokenRepository.InvalidatePreviousTokensAsync(user.UserId);
+            await _passwordResetTokenRepository
+                .InvalidatePreviousTokensAsync(user.UserId);
 
             var expiryMinutes = double.Parse(
-                _configuration["TokenSettings:PasswordResetExpiryMinutes"] ?? "30");
+                _configuration["TokenSettings:PasswordResetExpiryMinutes"]
+                ?? "30");
 
             var resetToken = new PasswordResetToken
             {
                 UserId = user.UserId,
-                Token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"),
+                Token = Guid.NewGuid().ToString("N") +
+                        Guid.NewGuid().ToString("N"),
                 ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
                 IsUsed = false,
                 CreatedAt = DateTime.UtcNow
@@ -266,26 +295,33 @@ namespace CampusServicePortal.Services.Implementation
 
         public async Task ResetPasswordAsync(ResetPasswordDto dto)
         {
-            var tokenRecord = await _passwordResetTokenRepository.GetValidTokenAsync(dto.Token);
+            var tokenRecord =
+                await _passwordResetTokenRepository
+                    .GetValidTokenAsync(dto.Token);
 
             if (tokenRecord == null)
             {
                 throw new InvalidOperationException(
-                    "The password reset link is invalid, has already been used, or has expired.");
+                    "The password reset link is invalid or expired.");
             }
 
-            var user = tokenRecord.User
-                ?? await _authRepository.GetUserByIdAsync(tokenRecord.UserId);
+            var user = tokenRecord.User ??
+                       await _authRepository
+                           .GetUserByIdAsync(tokenRecord.UserId);
 
             if (user == null)
             {
                 throw new InvalidOperationException("User not found.");
             }
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.PasswordHash =
+                BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
 
-            await _passwordResetTokenRepository.MarkTokenUsedAsync(tokenRecord.TokenId);
-            await _passwordResetTokenRepository.InvalidatePreviousTokensAsync(user.UserId);
+            await _passwordResetTokenRepository
+                .MarkTokenUsedAsync(tokenRecord.TokenId);
+
+            await _passwordResetTokenRepository
+                .InvalidatePreviousTokensAsync(user.UserId);
 
             foreach (var refreshToken in user.RefreshTokens)
             {
@@ -299,23 +335,49 @@ namespace CampusServicePortal.Services.Implementation
 
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("JWT Key is missing in appsettings.json.");
+            var jwtKey = _configuration["Jwt:Key"];
 
-            var issuer = _configuration["Jwt:Issuer"] ?? "CampusServicePortal";
-            var audience = _configuration["Jwt:Audience"] ?? "CampusServicePortalUsers";
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT Key is missing in appsettings.json.");
+            }
+
+            var issuer =
+                _configuration["Jwt:Issuer"] ?? "CampusServicePortal";
+
+            var audience =
+                _configuration["Jwt:Audience"]
+                ?? "CampusServicePortalUsers";
+
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey));
 
             var credentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                key,
                 SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Student"),
-                new Claim("studentId", user.Student?.StudentId.ToString() ?? "0")
+                new Claim(
+                    JwtRegisteredClaimNames.Sub,
+                    user.UserId.ToString()),
+
+                new Claim(
+                    JwtRegisteredClaimNames.Email,
+                    user.Email),
+
+                new Claim(
+                    JwtRegisteredClaimNames.Jti,
+                    Guid.NewGuid().ToString()),
+
+                new Claim(
+                    ClaimTypes.Role,
+                    user.Role?.RoleName ?? "Student"),
+
+                new Claim(
+                    "studentId",
+                    user.Student?.StudentId.ToString() ?? "0")
             };
 
             var token = new JwtSecurityToken(
@@ -325,17 +387,21 @@ namespace CampusServicePortal.Services.Implementation
                 expires: DateTime.UtcNow.AddMinutes(60),
                 signingCredentials: credentials);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler()
+                .WriteToken(token);
         }
 
-        private async Task<Faculty?> ResolveFacultyAsync(string? facultyName)
+        private async Task<Faculty?> ResolveFacultyAsync(
+            string? facultyName)
         {
             if (string.IsNullOrWhiteSpace(facultyName))
             {
                 return null;
             }
 
-            var existing = await _facultyRepository.GetByNameAsync(facultyName.Trim());
+            var existing =
+                await _facultyRepository.GetByNameAsync(
+                    facultyName.Trim());
 
             if (existing != null)
             {

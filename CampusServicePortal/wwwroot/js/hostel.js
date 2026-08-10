@@ -1,5 +1,16 @@
-﻿const API_URL = "/api/Hostel";
+const API_URL = "/api/Hostel";
 
+async function authorizedFetch(endpoint, options = {}) {
+    const token = Auth.getToken();
+    if (!token) {
+        Auth.logout();
+        throw new Error("Please sign in again.");
+    }
+
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+}
 let editingHostelId = null;
 
 
@@ -21,7 +32,7 @@ async function loadHostels() {
 
     try {
 
-        const response = await fetch(API_URL);
+        const response = await authorizedFetch(API_URL);
 
         if (!response.ok) {
             throw new Error("Failed to load hostels.");
@@ -153,7 +164,7 @@ async function editHostel(id) {
 
     try {
 
-        const response = await fetch(`${API_URL}/${id}`);
+        const response = await authorizedFetch(`${API_URL}/${id}`);
 
         if (!response.ok) {
             throw new Error("Failed to load hostel.");
@@ -233,7 +244,7 @@ document
 
                 // CREATE
 
-                response = await fetch(API_URL, {
+                response = await authorizedFetch(API_URL, {
 
                     method: "POST",
 
@@ -248,7 +259,7 @@ document
 
                 // UPDATE
 
-                response = await fetch(
+                response = await authorizedFetch(
                     `${API_URL}/${editingHostelId}`,
                     {
                         method: "PUT",
@@ -323,7 +334,7 @@ async function deleteHostel(id) {
 
     try {
 
-        const response = await fetch(
+        const response = await authorizedFetch(
             `${API_URL}/${id}`,
             {
                 method: "DELETE"

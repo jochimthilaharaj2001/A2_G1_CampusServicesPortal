@@ -49,7 +49,7 @@
             <p class="dashboard-stat-value" id="stat-upcoming-labs">-</p>
           </div>
         </article>
-        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">📣</div><div><p class="dashboard-stat-label">Open Complaints</p><p class="dashboard-stat-value" id="stat-open-complaints">-</p></div></article>
+        <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">📣</div><div><p class="dashboard-stat-label">Open Complaints</p><p class="dashboard-stat-value" id="stat-open-complaints">-</p></div></article><article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-bookings">🔔</div><div><p class="dashboard-stat-label">Unread Notifications</p><p class="dashboard-stat-value" id="stat-unread-notifications">-</p></div></article>
         <article class="dashboard-stat-card"><div class="dashboard-stat-icon icon-status">₨</div><div><p class="dashboard-stat-label">Outstanding Fees</p><p class="dashboard-stat-text" id="stat-outstanding-fees">-</p></div></article>
         <article class="dashboard-stat-card">
           <div class="dashboard-stat-icon icon-bookings">📅</div>
@@ -112,16 +112,22 @@
             </div>
           </div>
           <dl class="dashboard-profile-details">
-            <div><dt>Degree</dt><dd id="dashboard-degree">-</dd></div>
-            <div><dt>Enrolment</dt><dd id="dashboard-enrollment-year">-</dd></div>
-            <div><dt>Email</dt><dd id="dashboard-email">-</dd></div>
+            <div>
+              <dt>Degree</dt>
+              <dd id="dashboard-degree">-</dd>
+            </div>
+            <div>
+              <dt>Enrolment</dt><dd id="dashboard-enrollment-year">-</dd>
+            </div>
+            <div><dt>Email</dt><dd id="dashboard-email">-</dd>
+              </div>
           </dl>
         </aside>
       </section>
 
       <section class="dashboard-content-grid" style="margin-top:1.25rem">
         <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Recent Complaints</h2><p>Track updates to your submitted issues.</p></div><a href="/complaints.html" class="text-link">Open complaints</a></div><div id="dashboard-complaints" class="upcoming-bookings-list"></div></article>
-        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Fee Summary</h2><p>Outstanding fees and payment history.</p></div><a href="/fees.html" class="text-link">Open fees</a></div><div id="dashboard-fees" class="upcoming-bookings-list"></div></article>
+        <article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Fee Summary</h2><p>Outstanding fees and payment history.</p></div><a href="/fees.html" class="text-link">Open fees</a></div><div id="dashboard-fees" class="upcoming-bookings-list"></div></article><article class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>Notifications</h2><p>Recent updates from campus services.</p></div><a href="/notifications.html" class="text-link">View all</a></div><div id="dashboard-notifications" class="upcoming-bookings-list"></div></article>
       </section>
 
       <section class="dashboard-services-section">
@@ -136,7 +142,7 @@
             <span class="dashboard-service-icon">🏠</span>
             <h3>Hostel Applications</h3>
             <p>Apply for and track accommodation requests.</p>
-            <a href="/complaints.html" class="text-link">Manage complaints</a>
+            <a href="/hostel-applications.html" class="text-link">Open applications</a>
           </article>
           <article class="dashboard-service-card active-service">
             <span class="dashboard-service-icon">🔬</span>

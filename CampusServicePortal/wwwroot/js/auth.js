@@ -213,21 +213,28 @@ function updateStepIndicator(activeStep) {
 
 // ════════════════════════════════════════════════════════════════════════════
 // VERIFY EMAIL
-// ════════════════════════════════════════════════════════════════════════════
+// ============================================================================
 if (document.getElementById('verify-status')) {
     (async () => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get('token');
+        const query = new URLSearchParams(window.location.search);
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const token = query.get('token') || hash.get('token');
+        const resendRequested = query.get('resend') === '1' || hash.get('resend') === '1';
         const statusEl = document.getElementById('verify-status');
         const resendSection = document.getElementById('resend-section');
 
         if (!token) {
             statusEl.innerHTML = `
-                <div class="alert alert-error">
-                    <span class="alert-icon">❌</span>
-                    <span>No verification token found. Please use the link from your email.</span>
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <span>Open the verification link sent to your email. If you did not receive it, request a new link below.</span>
                 </div>`;
-            if (resendSection) resendSection.style.display = 'block';
+            if (resendSection) {
+                resendSection.style.display = 'block';
+                if (resendRequested) {
+                    document.getElementById('resend-email')?.focus();
+                }
+            }
             return;
         }
 
@@ -255,11 +262,13 @@ if (document.getElementById('verify-status')) {
                 if (resendSection) resendSection.style.display = 'block';
             }
         } catch (err) {
+            console.error('Email verification failed', err);
             statusEl.innerHTML = `
                 <div class="alert alert-error">
                     <span class="alert-icon">❌</span>
                     <span>Unable to connect to the server. Please try again.</span>
                 </div>`;
+            if (resendSection) resendSection.style.display = 'block';
         }
     })();
 }
@@ -280,7 +289,7 @@ if (document.getElementById('resend-form')) {
         try {
             const res = await api.post('/api/auth/resend-verification', { email: emailEl.value.trim() });
             if (res.ok) {
-                UI.showAlert('resend-alert', 'success', 'A new verification email has been sent. Please check your inbox.');
+                UI.showAlert('resend-alert', 'success', 'A new verification email has been sent. Please check your inbox and click the link in that email.');
                 emailEl.value = '';
             } else {
                 UI.showAlert('resend-alert', 'error', res.data?.message || 'Failed to resend email.');
@@ -292,8 +301,6 @@ if (document.getElementById('resend-form')) {
         }
     });
 }
-
-// ════════════════════════════════════════════════════════════════════════════
 // FORGOT PASSWORD
 // ════════════════════════════════════════════════════════════════════════════
 if (document.getElementById('forgot-form')) {
@@ -310,13 +317,18 @@ if (document.getElementById('forgot-form')) {
 
         UI.setLoading(btnEl, true);
         try {
-            // API always returns 200 (never reveals if email exists — BRD rule)
-            await api.post('/api/auth/forgot-password', { email: emailEl.value.trim() });
+            // Unknown emails still receive a generic success response by design.
+            // A non-2xx response means the configured mail provider rejected the send.
+            const res = await api.post('/api/auth/forgot-password', { email: emailEl.value.trim() });
+            if (!res?.ok) {
+                throw new Error(res?.data?.message || 'The reset email could not be sent.');
+            }
             UI.showAlert('forgot-alert', 'success',
-                'If your email is registered, you will receive a reset link shortly. Please check your inbox.');
+                res.data?.message || 'If your email is registered, you will receive a reset link shortly. Please check your inbox.');
             emailEl.value = '';
-        } catch {
-            UI.showAlert('forgot-alert', 'error', 'Server error. Please try again.');
+        } catch (error) {
+            console.error('Password reset email request failed', error);
+            UI.showAlert('forgot-alert', 'error', error.message || 'Server error. Please try again.');
         } finally {
             UI.setLoading(btnEl, false);
         }

@@ -1,10 +1,23 @@
-﻿const APPLICATION_API = "/api/HostelApplication";
+const APPLICATION_API = "/api/HostelApplication";
 const HOSTEL_API = "/api/Hostel";
 const ROOM_API = "/api/Room";
+const STUDENT_API = "/api/Students";
 
+async function authorizedFetch(endpoint, options = {}) {
+    const token = Auth.getToken();
+    if (!token) {
+        Auth.logout();
+        throw new Error("Please sign in again.");
+    }
+
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+}
 let applications = [];
 let hostels = [];
 let rooms = [];
+let students = [];
 let editingApplicationId = null;
 
 
@@ -14,12 +27,131 @@ let editingApplicationId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    await loadHostels();
-    await loadRooms();
+    await Promise.all([
+        loadHostels(),
+        loadRooms(),
+        loadStudents()
+    ]);
+
     await loadApplications();
 
 });
 
+// ==========================================
+// STUDENT INDEX NUMBER LOOKUP
+// ==========================================
+
+async function loadStudents() {
+    try {
+        const response = await api.get(
+            `${STUDENT_API}?page=1&pageSize=100`,
+            true
+        );
+
+        if (!response?.ok) {
+            throw new Error("Failed to load student index numbers.");
+        }
+
+        students = Array.isArray(response.data?.items)
+            ? response.data.items
+            : [];
+
+        const options = document.getElementById("studentIndexOptions");
+        options.innerHTML = "";
+        students.forEach(addStudentOption);
+    } catch (error) {
+        console.error(error);
+        students = [];
+        showMessage(
+            "Student index numbers could not be loaded. Please sign in again.",
+            "error"
+        );
+    }
+}
+
+function addStudentOption(student) {
+    const options = document.getElementById("studentIndexOptions");
+    if (!options || !student?.indexNumber) {
+        return;
+    }
+
+    const hasOption = Array.from(options.options).some(option =>
+        normalizeIndexNumber(option.value) === normalizeIndexNumber(student.indexNumber)
+    );
+    if (hasOption) {
+        return;
+    }
+
+    const option = document.createElement("option");
+    option.value = student.indexNumber;
+    option.label = student.fullName || "";
+    options.appendChild(option);
+}
+
+function normalizeIndexNumber(value) {
+    return String(value || "").trim().toUpperCase();
+}
+
+function getCachedStudentByIndexNumber(indexNumber) {
+    const normalizedIndexNumber = normalizeIndexNumber(indexNumber);
+    return students.find(student =>
+        normalizeIndexNumber(student.indexNumber) === normalizedIndexNumber
+    ) || null;
+}
+
+function getCachedStudentById(studentId) {
+    return students.find(student =>
+        Number(student.studentId) === Number(studentId)
+    ) || null;
+}
+
+async function resolveStudentByIndexNumber(indexNumber) {
+    const cachedStudent = getCachedStudentByIndexNumber(indexNumber);
+    if (cachedStudent) {
+        return cachedStudent;
+    }
+
+    const normalizedIndexNumber = normalizeIndexNumber(indexNumber);
+    const response = await api.get(
+        `${STUDENT_API}?search=${encodeURIComponent(normalizedIndexNumber)}&page=1&pageSize=20`,
+        true
+    );
+
+    if (!response?.ok) {
+        throw new Error("Failed to validate the Student Index Number.");
+    }
+
+    const matchedStudent = (response.data?.items || []).find(student =>
+        normalizeIndexNumber(student.indexNumber) === normalizedIndexNumber
+    ) || null;
+
+    if (matchedStudent && !getCachedStudentById(matchedStudent.studentId)) {
+        students.push(matchedStudent);
+        addStudentOption(matchedStudent);
+    }
+
+    return matchedStudent;
+}
+
+async function getStudentById(studentId) {
+    const cachedStudent = getCachedStudentById(studentId);
+    if (cachedStudent) {
+        return cachedStudent;
+    }
+
+    const response = await api.get(`${STUDENT_API}/${studentId}`, true);
+    if (!response?.ok) {
+        return null;
+    }
+
+    const student = response.data;
+    if (student && !getCachedStudentById(student.studentId)) {
+        students.push(student);
+        addStudentOption(student);
+    }
+
+    return student || null;
+}
 
 // ==========================================
 // LOAD HOSTELS
@@ -29,7 +161,7 @@ async function loadHostels() {
 
     try {
 
-        const response = await fetch(HOSTEL_API);
+        const response = await authorizedFetch(HOSTEL_API);
 
         if (!response.ok) {
             throw new Error("Failed to load hostels.");
@@ -73,7 +205,7 @@ async function loadRooms() {
 
     try {
 
-        const response = await fetch(ROOM_API);
+        const response = await authorizedFetch(ROOM_API);
 
         if (!response.ok) {
             throw new Error("Failed to load rooms.");
@@ -112,7 +244,7 @@ async function loadApplications() {
     try {
 
         const response =
-            await fetch(APPLICATION_API);
+            await authorizedFetch(APPLICATION_API);
 
         if (!response.ok) {
             throw new Error(
@@ -184,6 +316,11 @@ function displayApplications(list) {
                 r => r.roomId === application.roomId
             );
 
+        const student =
+            getCachedStudentById(
+                application.studentId
+            );
+
 
         const status =
             application.status || "Pending";
@@ -204,7 +341,10 @@ function displayApplications(list) {
             </td>
 
             <td>
-                Student ${application.studentId}
+                ${student
+                ? `${escapeHtml(student.indexNumber)} — ${escapeHtml(student.fullName)}`
+                : `Student ${application.studentId}`
+            }
             </td>
 
             <td>
@@ -378,7 +518,7 @@ async function editApplication(id) {
     try {
 
         const response =
-            await fetch(
+            await authorizedFetch(
                 `${APPLICATION_API}/${id}`
             );
 
@@ -403,9 +543,12 @@ async function editApplication(id) {
             "Edit Application";
 
 
-        document.getElementById("studentId")
+        const student =
+            await getStudentById(application.studentId);
+
+        document.getElementById("studentIndexNumber")
             .value =
-            application.studentId;
+            student?.indexNumber || "";
 
 
         document.getElementById("hostelId")
@@ -468,36 +611,58 @@ document
             event.preventDefault();
 
 
-            const baseData = {
-
-                studentId:
-                    Number(
-                        document.getElementById(
-                            "studentId"
-                        ).value
-                    ),
-
-                hostelId:
-                    Number(
-                        document.getElementById(
-                            "hostelId"
-                        ).value
-                    ),
-
-                semester:
+            const indexNumber =
+                normalizeIndexNumber(
                     document.getElementById(
-                        "semester"
-                    ).value.trim(),
-
-                specialRequirements:
-                    document.getElementById(
-                        "specialRequirements"
-                    ).value.trim() || null
-
-            };
-
+                        "studentIndexNumber"
+                    ).value
+                );
 
             try {
+
+                const student =
+                    await resolveStudentByIndexNumber(
+                        indexNumber
+                    );
+
+                if (!student) {
+
+                    showMessage(
+                        "Enter a valid registered Student Index Number.",
+                        "error"
+                    );
+
+                    document.getElementById(
+                        "studentIndexNumber"
+                    ).focus();
+
+                    return;
+                }
+
+
+                const baseData = {
+
+                    studentId:
+                        Number(student.studentId),
+
+                    hostelId:
+                        Number(
+                            document.getElementById(
+                                "hostelId"
+                            ).value
+                        ),
+
+                    semester:
+                        document.getElementById(
+                            "semester"
+                        ).value.trim(),
+
+                    specialRequirements:
+                        document.getElementById(
+                            "specialRequirements"
+                        ).value.trim() || null
+
+                };
 
                 let response;
 
@@ -509,7 +674,7 @@ document
                     // CREATE
 
                     response =
-                        await fetch(
+                        await authorizedFetch(
                             APPLICATION_API,
                             {
                                 method: "POST",
@@ -554,7 +719,7 @@ document
 
 
                     response =
-                        await fetch(
+                        await authorizedFetch(
                             `${APPLICATION_API}/${editingApplicationId}`,
                             {
                                 method: "PUT",
@@ -642,7 +807,7 @@ async function deleteApplication(id) {
     try {
 
         const response =
-            await fetch(
+            await authorizedFetch(
                 `${APPLICATION_API}/${id}`,
                 {
                     method: "DELETE"

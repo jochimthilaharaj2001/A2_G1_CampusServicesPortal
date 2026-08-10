@@ -165,11 +165,53 @@ const UI = {
         }
     },
 
+    /** Add a persistent collapse/expand control to the desktop sidebar. */
+    initSidebar() {
+        const navbar = document.querySelector('.navbar');
+        if (!navbar) return;
+
+        let toggle = navbar.querySelector('#sidebar-toggle');
+        if (!toggle) {
+            toggle = document.createElement('button');
+            toggle.id = 'sidebar-toggle';
+            toggle.className = 'sidebar-toggle';
+            toggle.type = 'button';
+            navbar.appendChild(toggle);
+        }
+
+        navbar.querySelectorAll('.nav-link').forEach(link => {
+            const label = link.textContent.trim();
+            if (!label) return;
+            link.dataset.short = label.charAt(0).toUpperCase();
+            link.title = label;
+        });
+
+        const collapsed = localStorage.getItem('csp_sidebar_collapsed') === '1';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        toggle.setAttribute('aria-expanded', String(!collapsed));
+        toggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+        toggle.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+        toggle.textContent = collapsed ? '»' : '«';
+
+        if (!toggle.dataset.bound) {
+            toggle.addEventListener('click', () => {
+                const nextCollapsed = !document.body.classList.contains('sidebar-collapsed');
+                document.body.classList.toggle('sidebar-collapsed', nextCollapsed);
+                localStorage.setItem('csp_sidebar_collapsed', nextCollapsed ? '1' : '0');
+                toggle.setAttribute('aria-expanded', String(!nextCollapsed));
+                toggle.setAttribute('aria-label', nextCollapsed ? 'Expand navigation' : 'Collapse navigation');
+                toggle.title = nextCollapsed ? 'Expand navigation' : 'Collapse navigation';
+                toggle.textContent = nextCollapsed ? '»' : '«';
+            });
+            toggle.dataset.bound = 'true';
+        }
+    },
     /** Populate navbar with logged-in user info */
     initNavbar() {
         const user = Auth.getUser();
         if (!user) return;
         this.normalizeNavigation();
+        this.initSidebar();
         const nameEl = document.getElementById('nav-name');
         const avatarEl = document.getElementById('nav-avatar');
         const adminLinks = document.querySelectorAll('.admin-only');
@@ -209,6 +251,8 @@ const UI = {
         ];
         const studentItems = [
             ['/dashboard.html', 'Dashboard'],
+            ['/hostel-applications.html', 'Hostel Applications'],
+            ['/notifications.html', 'Notifications'],
             ['/labs.html', 'Lab Reservations'],
             ['/events.html', 'Events'],
             ['/complaints.html', 'Complaints'],

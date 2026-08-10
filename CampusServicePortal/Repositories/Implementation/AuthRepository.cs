@@ -26,6 +26,7 @@ namespace CampusServicePortal.Repositories.Implementation
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Student)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
@@ -34,6 +35,7 @@ namespace CampusServicePortal.Repositories.Implementation
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Student)
+                .Include(u => u.RefreshTokens)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
@@ -59,7 +61,8 @@ namespace CampusServicePortal.Repositories.Implementation
                 .Include(u => u.Role)
                 .Include(u => u.Student)
                 .Include(u => u.RefreshTokens)
-                .FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
+                .FirstOrDefaultAsync(u =>
+                    u.EmailVerificationToken == token);
         }
 
         public async Task SaveChangesAsync()

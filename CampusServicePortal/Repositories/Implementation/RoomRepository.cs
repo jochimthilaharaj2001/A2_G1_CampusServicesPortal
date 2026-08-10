@@ -56,7 +56,7 @@ namespace CampusServicesPortal.Hostel.Repositories
             room.HostelId = dto.HostelId;
             room.RoomNumber = dto.RoomNumber;
             room.Capacity = dto.Capacity;
-            room.CurrentOccupancy = dto.CurrentOccupancy;
+            // Occupancy is maintained only by the approved room-assignment workflow.
             room.RoomType = dto.RoomType;
             room.IsActive = dto.IsActive;
 

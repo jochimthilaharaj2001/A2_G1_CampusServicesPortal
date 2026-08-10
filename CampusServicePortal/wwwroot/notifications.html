@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - Campus Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard.html" class="nav-brand">
+      <div class="nav-logo">🎓</div>
+      <span>Campus Portal</span>
+    </a>
+    <div class="nav-links"></div>
+    <div class="nav-user">
+      <a href="/profile.html" id="nav-avatar" class="user-avatar profile-nav-avatar">U</a>
+      <span id="nav-name">Student</span>
+      <button id="logout-btn" class="btn btn-ghost btn-sm" type="button">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper"><div class="container" style="max-width:1100px">
+    <div id="notifications-alert" class="alert global-alert"></div>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-subtitle">Updates from hostel, events, complaints, certificates, and fees.</p>
+      </div>
+      <span id="unread-count" class="badge badge-info">0 unread</span>
+    </div>
+
+    <section class="card dashboard-panel">
+      <div id="notifications-loading" class="dashboard-loading">
+        <div class="spinner"></div>
+        <span>Loading notifications...</span>
+      </div>
+      <div id="notifications-list" class="notification-list" hidden></div>
+      <div id="notifications-empty" class="dashboard-empty" hidden>
+        <div class="dashboard-empty-icon">🔔</div>
+        <h3>No notifications yet</h3>
+        <p>Important service updates will appear here.</p>
+      </div>
+    </section>
+      </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/student-notifications.js"></script>
+</body>
+</html>

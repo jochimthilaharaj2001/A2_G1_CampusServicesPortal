@@ -6,62 +6,44 @@ namespace CampusServicePortal.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        // ============================================================
-        // DATABASE TABLES
-        // ============================================================
-
-        // Users / Authentication
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
-
-        // Student Module
         public DbSet<Student> Students { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<StudentMasterList> StudentMasterList { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<Faculty> Faculties { get; set; }
-
-        // Certificate Module
         public DbSet<CertificateType> CertificateTypes { get; set; }
 
-        // Lab Module
         public DbSet<Lab> Labs { get; set; }
         public DbSet<LabSeat> LabSeats { get; set; }
         public DbSet<LabReservation> LabReservations { get; set; }
+
         public DbSet<ComplaintCategory> ComplaintCategories { get; set; }
         public DbSet<Complaint> Complaints { get; set; }
         public DbSet<FeeType> FeeTypes { get; set; }
         public DbSet<FeePayment> FeePayments { get; set; }
+
         public DbSet<Venue> Venues { get; set; }
         public DbSet<CampusEvent> Events { get; set; }
         public DbSet<EventSeat> EventSeats { get; set; }
         public DbSet<EventRegistration> EventRegistrations { get; set; }
         public DbSet<CertificateRequest> CertificateRequests { get; set; }
 
-        // Hostel Module
         public DbSet<Hostel> Hostels { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<HostelApplication> HostelApplications { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
-
-        // ============================================================
-        // MODEL CONFIGURATION
-        // ============================================================
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-
-            // ========================================================
-            // USER
-            // ========================================================
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Role)
@@ -71,11 +53,6 @@ namespace CampusServicePortal.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-
-
-            // ========================================================
-            // STUDENT
-            // ========================================================
 
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.User)
@@ -92,97 +69,71 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(s => s.FacultyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Hostel and notification integrity
+            modelBuilder.Entity<Hostel>()
+                .HasIndex(h => h.HostelName)
+                .IsUnique();
 
-            // ========================================================
-            // REFRESH TOKEN
-            // ========================================================
+            modelBuilder.Entity<Room>()
+                .HasIndex(r => new { r.HostelId, r.RoomNumber })
+                .IsUnique();
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.Hostel)
+                .WithMany()
+                .HasForeignKey(r => r.HostelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Room>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_Rooms_CapacityAndOccupancy",
+                    "[Capacity] > 0 AND [CurrentOccupancy] >= 0 AND [CurrentOccupancy] <= [Capacity]"));
+
+            modelBuilder.Entity<HostelApplication>()
+                .HasOne(a => a.Hostel)
+                .WithMany()
+                .HasForeignKey(a => a.HostelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HostelApplication>()
+                .HasOne(a => a.Room)
+                .WithMany()
+                .HasForeignKey(a => a.RoomId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HostelApplication>()
+                .HasIndex(a => new { a.StudentId, a.Status });
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.Student)
+                .WithMany()
+                .HasForeignKey(n => n.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(n => new { n.StudentId, n.CreatedDate });
 
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(rt => rt.User)
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId);
 
-
-            // ========================================================
-            // PASSWORD RESET TOKEN
-            // ========================================================
-
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany(u => u.PasswordResetTokens)
                 .HasForeignKey(prt => prt.UserId);
 
-
-            // ========================================================
-            // STUDENT MASTER LIST
-            // ========================================================
-
             modelBuilder.Entity<StudentMasterList>()
-                .HasIndex(sml => sml.IndexNumber)
+                .HasIndex(s => s.IndexNumber)
                 .IsUnique();
-
-
-            // ========================================================
-            // FACULTY
-            // ========================================================
 
             modelBuilder.Entity<Faculty>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
 
-
-            // ========================================================
-            // CERTIFICATE TYPE
-            // ========================================================
-
             modelBuilder.Entity<CertificateType>()
                 .HasIndex(c => c.Name)
                 .IsUnique();
-
-
-            // ========================================================
-            // ROLE SEED DATA
-            // ========================================================
-
-            modelBuilder.Entity<Role>().HasData(
-                new Role
-                {
-                    RoleId = 1,
-                    RoleName = "Admin"
-                },
-                new Role
-                {
-                    RoleId = 2,
-                    RoleName = "Student"
-                }
-            );
-
-
-            // ========================================================
-            // LAB RESERVATION → USER
-            // ========================================================
-
-            modelBuilder.Entity<LabReservation>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.LabReservations)
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ========================================================
-            // LAB RESERVATION → LAB
-            // ========================================================
-
-            modelBuilder.Entity<LabReservation>()
-                .HasOne(r => r.Lab)
-                .WithMany()
-                .HasForeignKey(r => r.LabId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ========================================================
-            // COMPLAINT MODULE
-            // ========================================================
 
             modelBuilder.Entity<ComplaintCategory>()
                 .HasIndex(c => c.Name)
@@ -200,11 +151,6 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(c => c.ComplaintCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // ========================================================
-            // FEE MODULE
-            // ========================================================
-
             modelBuilder.Entity<FeeType>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
@@ -220,11 +166,6 @@ namespace CampusServicePortal.Data
                 .WithMany(t => t.FeePayments)
                 .HasForeignKey(f => f.FeeTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ========================================================
-            // EVENT MODULE
-            // ========================================================
 
             modelBuilder.Entity<Venue>()
                 .HasIndex(v => v.Name)
@@ -264,11 +205,6 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(r => r.EventSeatId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // ========================================================
-            // CERTIFICATE REQUEST
-            // ========================================================
-
             modelBuilder.Entity<CertificateRequest>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.CertificateRequests)
@@ -281,10 +217,22 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(r => r.CertificateTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Role>().HasData(
+                new Role { RoleId = 1, RoleName = "Admin" },
+                new Role { RoleId = 2, RoleName = "Student" }
+            );
 
-            // ========================================================
-            // LAB → LAB SEAT
-            // ========================================================
+            modelBuilder.Entity<LabReservation>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.LabReservations)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LabReservation>()
+                .HasOne(r => r.Lab)
+                .WithMany()
+                .HasForeignKey(r => r.LabId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<LabSeat>()
                 .HasOne(s => s.Lab)
@@ -292,21 +240,11 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(s => s.LabId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-            // ========================================================
-            // LAB RESERVATION → LAB SEAT
-            // ========================================================
-
             modelBuilder.Entity<LabReservation>()
                 .HasOne(r => r.Seat)
                 .WithMany(s => s.LabReservations)
                 .HasForeignKey(r => r.SeatId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ========================================================
-            // MODULE 9 — FACULTY SEED DATA
-            // ========================================================
 
             modelBuilder.Entity<Faculty>().HasData(
                 new Faculty
@@ -315,60 +253,41 @@ namespace CampusServicePortal.Data
                     Name = "Computing",
                     Code = "COMP",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new Faculty
                 {
                     FacultyId = 2,
                     Name = "Engineering",
                     Code = "ENG",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new Faculty
                 {
                     FacultyId = 3,
                     Name = "Business",
                     Code = "BUS",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new Faculty
                 {
                     FacultyId = 4,
                     Name = "Science",
                     Code = "SCI",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new Faculty
                 {
                     FacultyId = 5,
                     Name = "Arts",
                     Code = "ARTS",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 }
             );
-
-
-            // ========================================================
-            // CERTIFICATE TYPE SEED DATA
-            // ========================================================
 
             modelBuilder.Entity<CertificateType>().HasData(
                 new CertificateType
@@ -377,38 +296,25 @@ namespace CampusServicePortal.Data
                     Name = "Bonafide Certificate",
                     Description = "Confirms student enrolment status",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new CertificateType
                 {
                     CertificateTypeId = 2,
                     Name = "Transcript",
                     Description = "Academic transcript of results",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 },
-
                 new CertificateType
                 {
                     CertificateTypeId = 3,
                     Name = "Completion Letter",
                     Description = "Confirms programme completion",
                     IsActive = true,
-                    CreatedAt = new DateTime(
-                        2026, 1, 1, 0, 0, 0,
-                        DateTimeKind.Utc)
+                    CreatedAt = new DateTime(2026, 1, 1)
                 }
             );
-
-
-            // ========================================================
-            // LAB SEED DATA
-            // ========================================================
 
             modelBuilder.Entity<Lab>().HasData(
                 new Lab
@@ -420,7 +326,6 @@ namespace CampusServicePortal.Data
                     LabType = LabType.Computer,
                     Capacity = 30
                 },
-
                 new Lab
                 {
                     LabId = 2,
@@ -430,7 +335,6 @@ namespace CampusServicePortal.Data
                     LabType = LabType.Computer,
                     Capacity = 20
                 },
-
                 new Lab
                 {
                     LabId = 3,
