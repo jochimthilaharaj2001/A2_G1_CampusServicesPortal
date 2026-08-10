@@ -17,11 +17,15 @@ namespace CampusServicesPortal.Hostel.Models
 
         [Required]
         [MaxLength(100)]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(255)]
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(60)]
+        public string Type { get; set; } = "System";
 
         public bool IsRead { get; set; } = false;
 

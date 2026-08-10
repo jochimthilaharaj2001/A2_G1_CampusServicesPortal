@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CampusServicesPortal.Hostel.Services;
 using CampusServicesPortal.Hostel.DTOs;
@@ -16,31 +16,27 @@ namespace CampusServicesPortal.Hostel.Controllers
         {
             _hostelService = hostelService;
         }
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HostelModel>>> GetHostels()
-        {
-            var hostels = await _hostelService.GetAllAsync();
-            return Ok(hostels);
-        }
-        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<HostelModel>>> GetHostels() =>
+            Ok(await _hostelService.GetAllAsync());
+
+        [HttpGet("{id:int}")]
+        [Authorize]
         public async Task<ActionResult<HostelModel>> GetHostel(int id)
         {
             var hostel = await _hostelService.GetByIdAsync(id);
-
-            if (hostel == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(hostel);
+            return hostel is null ? NotFound() : Ok(hostel);
         }
+
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<HostelModel>> CreateHostel(CreateHostelDto dto)
         {
             try
             {
                 var hostel = await _hostelService.CreateAsync(dto);
-
                 return CreatedAtAction(nameof(GetHostel), new { id = hostel.HostelId }, hostel);
             }
             catch (InvalidOperationException ex)
@@ -48,36 +44,34 @@ namespace CampusServicesPortal.Hostel.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        [HttpPut("{id}")]
+
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<HostelModel>> UpdateHostel(int id, UpdateHostelDto dto)
         {
             try
             {
                 var hostel = await _hostelService.UpdateAsync(id, dto);
-
-                if (hostel == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(hostel);
+                return hostel is null ? NotFound() : Ok(hostel);
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
-        [HttpDelete("{id}")]
+
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteHostel(int id)
         {
-            var deleted = await _hostelService.DeleteAsync(id);
-
-            if (!deleted)
+            try
             {
-                return NotFound();
+                return await _hostelService.DeleteAsync(id) ? NoContent() : NotFound();
             }
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

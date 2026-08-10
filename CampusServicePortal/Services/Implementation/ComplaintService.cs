@@ -2,11 +2,12 @@ using CampusServicePortal.Data;
 using CampusServicePortal.DTOs.Complaints;
 using CampusServicePortal.Models;
 using CampusServicePortal.Services.Interfaces;
+using CampusServicesPortal.Hostel.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusServicePortal.Services.Implementation;
 
-public class ComplaintService(ApplicationDbContext context) : IComplaintService
+public class ComplaintService(ApplicationDbContext context, INotificationQueue notifications) : IComplaintService
 {
     public async Task<IReadOnlyList<ComplaintCategoryDto>> GetCategoriesAsync(bool includeInactive = false) =>
         await context.ComplaintCategories.AsNoTracking()
@@ -74,10 +75,22 @@ public class ComplaintService(ApplicationDbContext context) : IComplaintService
     {
         var complaint = await context.Complaints.FindAsync(id)
             ?? throw new KeyNotFoundException("Complaint not found.");
+
+        var previousStatus = complaint.Status;
         complaint.Status = dto.Status;
         complaint.ResolutionNote = dto.ResolutionNote?.Trim();
         complaint.UpdatedAt = DateTime.UtcNow;
         complaint.ResolvedAt = dto.Status == "Resolved" ? DateTime.UtcNow : null;
+
+        if (!string.Equals(previousStatus, dto.Status, StringComparison.Ordinal))
+        {
+            await notifications.QueueForUserAsync(
+                complaint.UserId,
+                "ComplaintStatusChanged",
+                "Complaint update",
+                $"Your complaint status is now {dto.Status}.");
+        }
+
         await context.SaveChangesAsync();
         return await GetByIdAsync(id);
     }

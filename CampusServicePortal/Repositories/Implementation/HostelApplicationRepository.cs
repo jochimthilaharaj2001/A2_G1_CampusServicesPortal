@@ -41,7 +41,7 @@ namespace CampusServicesPortal.Hostel.Repositories
                 Semester = dto.Semester,
                 SpecialRequirements = dto.SpecialRequirements,
                 Status = "Pending",
-                AppliedDate = DateTime.Now
+                AppliedDate = DateTime.UtcNow
             };
 
             _context.HostelApplications.Add(application);

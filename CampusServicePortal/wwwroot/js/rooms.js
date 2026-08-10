@@ -1,6 +1,17 @@
-﻿const ROOM_API = "/api/Room";
+const ROOM_API = "/api/Room";
 const HOSTEL_API = "/api/Hostel";
 
+async function authorizedFetch(endpoint, options = {}) {
+    const token = Auth.getToken();
+    if (!token) {
+        Auth.logout();
+        throw new Error("Please sign in again.");
+    }
+
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+}
 let editingRoomId = null;
 let hostels = [];
 
@@ -30,7 +41,7 @@ async function loadHostels() {
     try {
 
         const response =
-            await fetch(HOSTEL_API);
+            await authorizedFetch(HOSTEL_API);
 
         if (!response.ok) {
             throw new Error("Failed to load hostels.");
@@ -89,7 +100,7 @@ async function loadRooms() {
     try {
 
         const response =
-            await fetch(ROOM_API);
+            await authorizedFetch(ROOM_API);
 
         if (!response.ok) {
             throw new Error("Failed to load rooms.");
@@ -282,7 +293,7 @@ async function editRoom(id) {
     try {
 
         const response =
-            await fetch(`${ROOM_API}/${id}`);
+            await authorizedFetch(`${ROOM_API}/${id}`);
 
         if (!response.ok) {
 
@@ -407,7 +418,7 @@ document
                     // CREATE
 
                     response =
-                        await fetch(
+                        await authorizedFetch(
                             ROOM_API,
                             {
                                 method: "POST",
@@ -437,7 +448,7 @@ document
 
 
                     response =
-                        await fetch(
+                        await authorizedFetch(
                             `${ROOM_API}/${editingRoomId}`,
                             {
                                 method: "PUT",
@@ -527,7 +538,7 @@ async function deleteRoom(id) {
     try {
 
         const response =
-            await fetch(
+            await authorizedFetch(
                 `${ROOM_API}/${id}`,
                 {
                     method: "DELETE"

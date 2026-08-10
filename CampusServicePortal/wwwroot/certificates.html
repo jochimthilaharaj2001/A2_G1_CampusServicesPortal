@@ -1,4 +1,174 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Certificates - Campus Portal</title><link rel="stylesheet" href="/css/style.css"></head>
-<body><div class="page-bg"></div><nav class="navbar"><a href="/dashboard.html" class="nav-brand"><div class="nav-logo">🎓</div>Campus Portal</a><div class="nav-links"></div><div class="nav-user"><a href="/profile.html" class="user-avatar profile-nav-avatar" id="nav-avatar">U</a><span id="nav-name">Student</span><button id="logout-btn" class="btn btn-ghost btn-sm">Sign Out</button></div></nav>
-<main class="page-wrapper"><div class="container" style="max-width:1100px"><div class="page-header"><div><h1 class="page-title">Certificate Requests</h1><p class="page-subtitle">Request an official certificate and track its processing status.</p></div></div><div id="certificate-alert" class="alert global-alert"></div><div class="dashboard-content-grid"><section class="card dashboard-panel"><h2 style="margin-top:0">Request a certificate</h2><p class="page-subtitle">You cannot submit another pending request for the same certificate type.</p><form id="certificate-form"><div class="form-group"><label for="certificate-type">Certificate type</label><select id="certificate-type" required><option value="">Loading certificate types...</option></select></div><div class="form-group"><label for="certificate-reason">Reason</label><textarea id="certificate-reason" rows="6" maxlength="1000" required placeholder="Explain why you need this certificate."></textarea></div><button class="btn btn-primary" type="submit">Submit Request</button></form></section><section class="card dashboard-panel"><div class="dashboard-panel-heading"><div><h2>My requests</h2><p>Current status and administrator notes.</p></div></div><div class="table-wrapper"><table><thead><tr><th>Certificate</th><th>Requested</th><th>Status</th><th>Note</th></tr></thead><tbody id="certificate-list"></tbody></table></div></section></div></div></main><script src="/js/api.js"></script><script src="/js/certificates.js"></script></body></html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Certificates - Campus Portal</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <div class="page-bg"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+
+        <a href="/dashboard.html" class="nav-brand">
+            <div class="nav-logo">🎓</div>
+            Campus Portal
+        </a>
+
+        <div class="nav-links"></div>
+
+        <div class="nav-user">
+
+            <a href="/profile.html"
+               class="user-avatar profile-nav-avatar"
+               id="nav-avatar">
+                U
+            </a>
+
+            <span id="nav-name">Student</span>
+
+            <button id="logout-btn" class="btn btn-ghost btn-sm">
+                Sign Out
+            </button>
+
+        </div>
+
+    </nav>
+
+    <!-- Main Content -->
+    <main class="page-wrapper">
+
+        <div class="container" style="max-width: 1100px;">
+
+            <!-- Page Header -->
+            <div class="page-header">
+
+                <div>
+                    <h1 class="page-title">
+                        Certificate Requests
+                    </h1>
+
+                    <p class="page-subtitle">
+                        Request an official certificate and track its processing status.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Alert -->
+            <div id="certificate-alert" class="alert global-alert"></div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-content-grid">
+
+                <!-- Request Certificate -->
+                <section class="card dashboard-panel">
+
+                    <h2 style="margin-top: 0;">
+                        Request a certificate
+                    </h2>
+
+                    <p class="page-subtitle">
+                        You cannot submit another pending request for the same certificate type.
+                    </p>
+
+                    <form id="certificate-form">
+
+                        <!-- Certificate Type -->
+                        <div class="form-group">
+
+                            <label for="certificate-type">
+                                Certificate type
+                            </label>
+
+                            <select id="certificate-type" required>
+                                <option value="">
+                                    Loading certificate types...
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <!-- Reason -->
+                        <div class="form-group">
+
+                            <label for="certificate-reason">
+                                Reason
+                            </label>
+
+                            <textarea id="certificate-reason"
+                                      rows="6"
+                                      maxlength="1000"
+                                      required
+                                      placeholder="Explain why you need this certificate."></textarea>
+
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button class="btn btn-primary"
+                                type="submit">
+                            Submit Request
+                        </button>
+
+                    </form>
+
+                </section>
+
+                <!-- My Requests -->
+                <section class="card dashboard-panel">
+
+                    <div class="dashboard-panel-heading">
+
+                        <div>
+                            <h2>My requests</h2>
+
+                            <p>
+                                Current status and administrator notes.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <!-- Requests Table -->
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Certificate</th>
+                                    <th>Requested</th>
+                                    <th>Status</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="certificate-list">
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- JavaScript -->
+    <script src="/js/api.js"></script>
+    <script src="/js/certificates.js"></script>
+
+</body>
+
+</html>

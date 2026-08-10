@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CampusServicesPortal.Hostel.DTOs;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using CampusServicesPortal.Hostel.Services;
+using CampusServicesPortal.Hostel.DTOs;
 using NotificationModel = CampusServicesPortal.Hostel.Models.Notification;
 
 namespace CampusServicesPortal.Hostel.Controllers
 {
+    [Route("api/notifications")]
     [Route("api/[controller]")]
     [ApiController]
     public class NotificationController : ControllerBase
@@ -17,49 +20,26 @@ namespace CampusServicesPortal.Hostel.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NotificationModel>>> GetNotifications()
-        {
-            var notifications = await _service.GetAllAsync();
-            return Ok(notifications);
-        }
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<NotificationModel>>> GetNotifications() =>
+            Ok(await _service.GetAllAsync());
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<NotificationModel>> GetNotification(int id)
         {
             var notification = await _service.GetByIdAsync(id);
-
-            if (notification == null)
-                return NotFound();
-
-            return Ok(notification);
-        }
-
-        [HttpGet("student/{studentId}")]
-        public async Task<ActionResult<IEnumerable<NotificationModel>>> GetByStudentId(int studentId)
-        {
-            try
-            {
-                var notifications = await _service.GetByStudentIdAsync(studentId);
-                return Ok(notifications);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return notification is null ? NotFound() : Ok(notification);
         }
 
         [HttpPost]
-        public async Task<ActionResult<NotificationModel>> CreateNotification(
-            CreateNotificationDto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<NotificationModel>> CreateNotification(CreateNotificationDto dto)
         {
             try
             {
                 var notification = await _service.CreateAsync(dto);
-
-                return CreatedAtAction(
-                    nameof(GetNotification),
-                    new { id = notification.NotificationId },
-                    notification);
+                return CreatedAtAction(nameof(GetNotification), new { id = notification.NotificationId }, notification);
             }
             catch (InvalidOperationException ex)
             {
@@ -67,19 +47,14 @@ namespace CampusServicesPortal.Hostel.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<NotificationModel>> UpdateNotification(
-            int id,
-            UpdateNotificationDto dto)
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<NotificationModel>> UpdateNotification(int id, UpdateNotificationDto dto)
         {
             try
             {
                 var notification = await _service.UpdateAsync(id, dto);
-
-                if (notification == null)
-                    return NotFound();
-
-                return Ok(notification);
+                return notification is null ? NotFound() : Ok(notification);
             }
             catch (InvalidOperationException ex)
             {
@@ -87,15 +62,38 @@ namespace CampusServicesPortal.Hostel.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNotification(int id)
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteNotification(int id) =>
+            await _service.DeleteAsync(id) ? NoContent() : NotFound();
+        [HttpGet("mine")]
+        [Authorize(Roles = "Student")]
+        public async Task<ActionResult<IEnumerable<NotificationModel>>> GetMyNotifications()
         {
-            var deleted = await _service.DeleteAsync(id);
+            var studentId = GetCurrentStudentId();
+            return studentId is null
+                ? Forbid()
+                : Ok(await _service.GetByStudentIdAsync(studentId.Value));
+        }
 
-            if (!deleted)
-                return NotFound();
+        [HttpPut("{id:int}/read")]
+        [Authorize(Roles = "Student")]
+        public async Task<ActionResult<NotificationModel>> MarkAsRead(int id)
+        {
+            var studentId = GetCurrentStudentId();
+            if (studentId is null)
+                return Forbid();
 
-            return NoContent();
+            var notification = await _service.MarkAsReadAsync(id, studentId.Value);
+            return notification is null ? NotFound() : Ok(notification);
+        }
+
+        private int? GetCurrentStudentId()
+        {
+            var claim = User.FindFirstValue("studentId");
+            return int.TryParse(claim, out var studentId) && studentId > 0
+                ? studentId
+                : null;
         }
     }
 }

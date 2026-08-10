@@ -14,5 +14,9 @@ namespace CampusServicesPortal.Hostel.DTOs
         [Required]
         [MaxLength(255)]
         public string Message { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(60)]
+        public string Type { get; set; } = "System";
     }
 }

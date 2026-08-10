@@ -28,11 +28,13 @@ namespace CampusServicesPortal.Hostel.Models
 
         [Required]
         [MaxLength(20)]
-        public string Semester { get; set; }
+        public string Semester { get; set; } = string.Empty;
 
         [MaxLength(255)]
         public string? SpecialRequirements { get; set; }
 
+        [Required]
+        [MaxLength(20)]
         public string Status { get; set; } = "Pending";
 
         public DateTime AppliedDate { get; set; } = DateTime.Now;

@@ -164,23 +164,21 @@ namespace CampusServicePortal.Services.Implementation
             string htmlBody)
         {
 
-            var apiKey =
-                _configuration["SendGrid:ApiKey"];
+            var apiKey = _configuration["SendGrid:ApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException("SendGrid:ApiKey is missing from configuration.");
+            }
 
+            var fromEmail = _configuration["SendGrid:FromEmail"];
+            var fromName = _configuration["SendGrid:FromName"] ?? "Campus Services Portal";
+            if (string.IsNullOrWhiteSpace(fromEmail))
+            {
+                throw new InvalidOperationException("SendGrid:FromEmail is missing from configuration.");
+            }
 
-            var client =
-                new SendGridClient(apiKey);
-
-
-
-            var from =
-                new EmailAddress(
-                    _configuration["SendGrid:FromEmail"],
-                    _configuration["SendGrid:FromName"]
-                );
-
-
-
+            var client = new SendGridClient(apiKey);
+            var from = new EmailAddress(fromEmail, fromName);
             var to =
                 new EmailAddress(
                     toEmail,
@@ -210,12 +208,12 @@ namespace CampusServicePortal.Services.Implementation
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    var responseBody = await response.Body.ReadAsStringAsync();
                     _logger.LogError(
-                        "SendGrid Error Status: {Status}",
-                        response.StatusCode
+                        "SendGrid Error Status: {Status}; Body: {Body}",
+                        response.StatusCode,
+                        responseBody
                     );
-
-
                     throw new Exception(
                         "SendGrid email failed"
                     );

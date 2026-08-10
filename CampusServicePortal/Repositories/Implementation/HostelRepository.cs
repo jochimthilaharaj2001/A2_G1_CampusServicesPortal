@@ -13,14 +13,13 @@ namespace CampusServicesPortal.Hostel.Repositories
         {
             _context = context;
         }
-        public async Task<IEnumerable<HostelModel>> GetAllAsync()
-        {
-            return await _context.Hostels.ToListAsync();
-        }
-        public async Task<HostelModel?> GetByIdAsync(int id)
-        {
-            return await _context.Hostels.FindAsync(id);
-        }
+
+        public Task<IEnumerable<HostelModel>> GetAllAsync() =>
+            _context.Hostels.ToListAsync().ContinueWith(task => (IEnumerable<HostelModel>)task.Result);
+
+        public Task<HostelModel?> GetByIdAsync(int id) =>
+            _context.Hostels.FindAsync(id).AsTask();
+
         public async Task<HostelModel> CreateAsync(CreateHostelDto dto)
         {
             var hostel = new HostelModel
@@ -34,18 +33,14 @@ namespace CampusServicesPortal.Hostel.Repositories
 
             _context.Hostels.Add(hostel);
             await _context.SaveChangesAsync();
-
             return hostel;
         }
 
         public async Task<HostelModel?> UpdateAsync(int id, UpdateHostelDto dto)
         {
             var hostel = await _context.Hostels.FindAsync(id);
-
             if (hostel == null)
-            {
                 return null;
-            }
 
             hostel.HostelName = dto.HostelName;
             hostel.Gender = dto.Gender;
@@ -54,33 +49,32 @@ namespace CampusServicesPortal.Hostel.Repositories
             hostel.IsActive = dto.IsActive;
 
             await _context.SaveChangesAsync();
-
             return hostel;
         }
-        public async Task<bool> HostelNameExistsAsync(string hostelName)
+
+        public Task<bool> HostelNameExistsAsync(string hostelName) =>
+            _context.Hostels.AnyAsync(hostel => hostel.HostelName == hostelName);
+
+        public Task<bool> HostelNameExistsAsync(string hostelName, int excludeId) =>
+            _context.Hostels.AnyAsync(hostel =>
+                hostel.HostelName == hostelName && hostel.HostelId != excludeId);
+
+        public async Task<bool> IsInUseAsync(int id)
         {
-            return await _context.Hostels
-                .AnyAsync(h => h.HostelName == hostelName);
+            return await _context.Rooms.AnyAsync(room => room.HostelId == id)
+                || await _context.HostelApplications.AnyAsync(application =>
+                    application.HostelId == id);
         }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var hostel = await _context.Hostels.FindAsync(id);
-
             if (hostel == null)
-            {
                 return false;
-            }
 
             _context.Hostels.Remove(hostel);
             await _context.SaveChangesAsync();
-
             return true;
-        }
-        public async Task<bool> HostelNameExistsAsync(string hostelName, int excludeId)
-        {
-            return await _context.Hostels.AnyAsync(h =>
-                h.HostelName == hostelName &&
-                h.HostelId != excludeId);
         }
     }
 }
