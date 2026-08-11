@@ -26,10 +26,13 @@ const Auth = {
         return u?.role === 'Admin';
     },
 
-    logout() {
+    logout(reason = null) {
         this.removeToken();
         this.removeUser();
-        window.location.href = '/login.html';
+        const loginUrl = reason
+            ? `/login.html?reason=${encodeURIComponent(reason)}`
+            : '/login.html';
+        window.location.replace(loginUrl);
     },
 
     requireLogin() {
@@ -69,6 +72,18 @@ async function apiRequest(method, endpoint, body = null, requiresAuth = false) {
         data = await response.json();
     } else {
         data = await response.text();
+    }
+
+    // A stored token can expire while the user is on the dashboard, or become
+    // invalid after a development server/database reset. Clear it immediately
+    // so protected pages do not stay open with profile widgets stuck loading.
+    if (requiresAuth && response.status === 401) {
+        Auth.logout('session-expired');
+        return {
+            ok: false,
+            status: response.status,
+            data: { message: 'Your session has expired. Please sign in again.' }
+        };
     }
 
     return { ok: response.ok, status: response.status, data };

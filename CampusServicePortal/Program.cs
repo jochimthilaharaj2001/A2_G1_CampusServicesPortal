@@ -20,6 +20,13 @@ namespace CampusServicePortal
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Keep validation settings aligned with AuthService.GenerateJwtToken.
+            // Local development may supply only Jwt:Key through user secrets.
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "CampusServicePortal";
+            var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CampusServicePortalUsers";
+            var jwtKey = builder.Configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("Jwt:Key is missing from configuration.");
+
             builder.Services.AddControllers();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -73,11 +80,10 @@ namespace CampusServicePortal
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        ValidIssuer = jwtIssuer,
+                        ValidAudience = jwtAudience,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(
-                                builder.Configuration["Jwt:Key"]!))
+                            Encoding.UTF8.GetBytes(jwtKey))
                     };
                 });
 

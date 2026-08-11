@@ -18,7 +18,14 @@ namespace CampusServicePortal.Helpers
 
         public string GenerateToken(User user)
         {
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+            var jwtKey = _configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("Jwt:Key is missing from configuration.");
+            var issuer = _configuration["Jwt:Issuer"] ?? "CampusServicePortal";
+            var audience = _configuration["Jwt:Audience"] ?? "CampusServicePortalUsers";
+            var duration = double.TryParse(_configuration["Jwt:DurationInMinutes"], out var configuredDuration)
+                ? configuredDuration
+                : 60;
+            var key = Encoding.UTF8.GetBytes(jwtKey);
 
             var claims = new[]
             {
@@ -33,11 +40,10 @@ namespace CampusServicePortal.Helpers
                 SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(
-                    Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])),
+                expires: DateTime.UtcNow.AddMinutes(duration),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

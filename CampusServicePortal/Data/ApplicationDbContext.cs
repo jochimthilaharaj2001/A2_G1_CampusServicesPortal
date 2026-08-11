@@ -167,6 +167,10 @@ namespace CampusServicePortal.Data
                 .HasForeignKey(f => f.FeeTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<FeePayment>()
+                .Property(f => f.Amount)
+                .HasPrecision(18, 2);
+
             modelBuilder.Entity<Venue>()
                 .HasIndex(v => v.Name)
                 .IsUnique();
