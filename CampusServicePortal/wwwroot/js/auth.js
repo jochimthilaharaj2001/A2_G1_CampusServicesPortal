@@ -13,6 +13,12 @@ if (document.getElementById('login-form')) {
     const btnEl = document.getElementById('login-btn');
     const alert = 'login-alert';
 
+    const loginQuery = new URLSearchParams(window.location.search);
+    if (loginQuery.get('reason') === 'session-expired') {
+        UI.showAlert(alert, 'info', 'Your session expired or is no longer valid. Please sign in again.');
+        window.history.replaceState({}, document.title, '/login.html');
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         Validate.clearAll(form);
