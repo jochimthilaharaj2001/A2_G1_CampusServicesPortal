@@ -18,9 +18,10 @@ namespace CampusServicePortal.Controllers
 
         // GET: api/student-master/{indexNumber}
         // Public endpoint called during registration step to verify an index number
-        [HttpGet("{indexNumber}")]
+        
+        [HttpGet("verify")]
         [AllowAnonymous]
-        public async Task<IActionResult> VerifyIndexNumber(string indexNumber)
+        public async Task<IActionResult> VerifyIndexNumber([FromQuery] string indexNumber)
         {
             try
             {
@@ -36,7 +37,6 @@ namespace CampusServicePortal.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
         // GET: api/student-master?search=
         // Admin search of master list
         [HttpGet]

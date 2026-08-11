@@ -103,8 +103,8 @@ if (document.getElementById('step1-form')) {
 
         UI.setLoading(verifyBtn, true);
         try {
-            const res = await api.get(`/api/student-master/${encodeURIComponent(indexNumber)}`);
-
+            
+            const res = await api.get(`/api/student-master/verify?indexNumber=${encodeURIComponent(indexNumber)}`);
             if (res.ok) {
                 masterRecord = res.data;
                 // Show step 2 and pre-fill known fields
